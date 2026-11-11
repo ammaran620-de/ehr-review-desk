@@ -32,7 +32,7 @@ st.html('<div class="hero"><div class="brandline">Clinical access analytics · r
         '<h1>EHR Review Desk</h1><p>Triage access alerts, inspect the supporting evidence, and record reviewer decisions.</p></div>')
 
 @st.cache_data(show_spinner='Python is generating events, model scores and SHAP explanations…')
-def baseline_run():
+def baseline_run(pipeline_digest):
     return run_pipeline()
 
 def copy_for(row, round_number, revisions):
@@ -48,7 +48,9 @@ def copy_for(row, round_number, revisions):
 action, info = st.columns([1, 3.6])
 if action.button('Run Python pipeline', type='primary', help='Regenerate the seeded synthetic data, score events and refresh this dashboard.'):
     baseline_run.clear()
-result = baseline_run()
+pipeline_digest = hashlib.sha256(b''.join((ROOT / name).read_bytes()
+    for name in ('pipeline.py', 'translation.py'))).hexdigest()
+result = baseline_run(pipeline_digest)
 workspace = st.radio('Data workspace', ['Rehearsal', 'Reviewer study'], horizontal=True,
                      help='Rehearsal responses and revisions are stored separately from research data.')
 participant_view = workspace == 'Reviewer study' and st.radio(
