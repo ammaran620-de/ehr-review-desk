@@ -1,5 +1,7 @@
 """Synthetic EHR detection, explanation and alert generation."""
 import json
+import hashlib
+import importlib.metadata
 
 from translation import translate
 
@@ -83,7 +85,17 @@ def run_pipeline():
     assert sum(y) == 100 and len(rows) == 1000
     # ROC uses continuous scores before clipping to preserve rank.
     roc_x, roc_y, _ = roc_curve(np.array(y)[~train], raw[~train])
-    return dict(rows=rows, features=features, cm=cm,
+    held_out = [dict(event=r['id'], actual=r['label'], predicted=int(r['flagged']),
+                     score=r['score'], raw_score=r['raw_score']) for r in rows if r['held_out']]
+    metadata = dict(seed=42, n_estimators=120, threshold=0.75, threshold_operator='>',
+        training_count=int(train.sum()), test_count=len(held_out),
+        test_anomalies=sum(r['actual'] for r in held_out),
+        split='Every fourth event held out; not an unseen-user split',
+        score='Relative training-normalized anomaly index, not a probability',
+        labels_used_for_fit=False,
+        dataset_sha256=hashlib.sha256(json.dumps(matrix, separators=(',', ':')).encode()).hexdigest(),
+        packages={p: importlib.metadata.version(p) for p in ('numpy', 'scikit-learn', 'shap')})
+    return dict(rows=rows, features=features, cm=cm, metadata=metadata, test_predictions=held_out,
         metrics=[float(p), float(rec), float(f1), (cm[0][0]+cm[1][1])/250,
                  float(roc_auc_score(np.array(y)[~train], raw[~train]))],
         roc=[roc_x.tolist(), roc_y.tolist()], expected=expected, baselines=baselines)

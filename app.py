@@ -14,6 +14,7 @@ from filelock import FileLock
 from feedback import read_feedback, save_feedback
 from revision_store import load_revisions, save_revision
 from pipeline import run_pipeline
+from research_context import REFERENCES, comparison_rows, evaluation_report
 
 ROOT = Path(__file__).resolve().parent
 SEVERITY = {'High': 0, 'Medium': 1, 'Low': 2}
@@ -83,8 +84,8 @@ st.html('<div class="overview-strip">' + ''.join(
 if participant_view:
     alerts_tab = st.container()
 else:
-    alerts_tab, evaluation_tab, policy_tab, study_tab, revisions_tab = st.tabs(
-        ['Alert review', 'Model evaluation', 'Role baselines', 'Study results', 'Revision studio'])
+    alerts_tab, evaluation_tab, research_tab, policy_tab, study_tab, revisions_tab = st.tabs(
+        ['Alert review', 'Model evaluation', 'Research context', 'Role baselines', 'Study results', 'Revision studio'])
 if 'saved_feedback' in st.session_state:
     st.success(st.session_state.pop('saved_feedback'))
 
@@ -94,34 +95,47 @@ with alerts_tab:
     round_number = 1 if round_name == 'Round 1' else 2
     if round_number == 2 and not revisions:
         st.info('Approve a revision or designate an unchanged control in Revision studio before collecting Round 2 feedback.')
-    queue, detail = st.columns([1, 2.25], gap='medium')
-    with queue, st.container(key='alert_queue'):
-        st.markdown('<div class="sectiontag">01 / TRIAGE</div>', unsafe_allow_html=True)
-        st.subheader('Alert queue')
-        severity_filter = 'All' if participant_view else st.selectbox('Severity', ['All', *SEVERITY])
-        query = st.text_input('Find case ID' if participant_view else 'Search event, role or department',
-                              placeholder='e.g. EVT-0903').strip().casefold()
+    with st.container(key='alert_queue'):
+        st.markdown('<div class="sectiontag">01 / ALERT REGISTER</div>', unsafe_allow_html=True)
+        st.subheader('All alerts')
+        st.caption('Select a row to open its explanation, SHAP evidence, role baseline and feedback form below. On a phone, swipe the table to see more columns.')
+        filters = st.columns([1, 2, 1])
+        severity_filter = filters[0].selectbox('Severity', ['All', *SEVERITY])
+        query = filters[1].text_input('Search alerts', placeholder='Search role, department, user or event').strip().casefold()
+        queue_status = filters[2].selectbox('Review status', ['All alerts', 'Awaiting a response', 'Has a response'])
         completed = {item['event'] for item in feedback if item['round'] == str(round_number)}
-        queue_status = st.selectbox('Review status', ['All alerts', 'Awaiting a response', 'Has a response'])
-        selected = st.session_state.get('selected_event', 'EVT-0903')
-        ordered = sorted(flagged, key=(lambda r: r['id']) if participant_view else
-                         (lambda r: (SEVERITY[copy_for(r, round_number, revisions)[1]], -r['score'], r['id'])))
+        ordered = sorted(flagged, key=lambda r: (SEVERITY[copy_for(r, round_number, revisions)[1]], -r['score'], r['id']))
         visible = [r for r in ordered if (severity_filter == 'All' or copy_for(r, round_number, revisions)[1] == severity_filter)
-                   and query in (r['id'] if participant_view else ' '.join(
-                       (r['id'], r['role'], r['user_id'], r['department_accessed']))).casefold()
+                   and query in ' '.join((r['id'], r['role'], r['user_id'], r['department_accessed'],
+                                          copy_for(r, round_number, revisions)[0])).casefold()
                    and (queue_status == 'All alerts' or (r['id'] in completed) == (queue_status == 'Has a response'))]
-        st.caption(f'{len(visible)} matching alerts' + ('' if participant_view else ' · severity, then score'))
-        with st.container(height=420):
-            for r in visible:
-                current_severity = copy_for(r, round_number, revisions)[1]
-                label = f'{r["id"]} · {r["role"]}'
-                if not participant_view:
-                    color = {'High': 'red', 'Medium': 'orange', 'Low': 'blue'}[current_severity]
-                    label = f':{color}-badge[{current_severity}]  {label}'
-                if st.button(label,
-                             key=f'open_{r["id"]}', width='stretch', type='primary' if selected == r['id'] else 'secondary'):
-                    st.session_state.selected_event = r['id']
-    with detail, st.container(key='alert_detail'):
+        st.caption(f'{len(visible)} of {len(flagged)} alerts · sorted by severity, then anomaly score · response status includes any reviewer in this workspace and round')
+        if visible:
+            register = pd.DataFrame([{
+                'Severity': copy_for(r, round_number, revisions)[1], 'Event': r['id'],
+                'Role': r['role'], 'Department': r['department_accessed'],
+                'Time': f'{r["date"]} {r["login_time"]}',
+                'Alert summary': copy_for(r, round_number, revisions)[0].splitlines()[0],
+                'Response': 'Received' if r['id'] in completed else 'Awaiting',
+            } for r in visible])
+            def severity_style(value):
+                backgrounds = {'High': '#f8e0e4', 'Medium': '#faecd3', 'Low': '#e0eaf5'}
+                return f'background-color: {backgrounds[value]}; color: {COLORS[value]}; font-weight: bold'
+            # A changed row order gets a fresh widget, so a stale row index cannot open a different case.
+            signature = hashlib.sha256(json.dumps(register.to_dict('records'), sort_keys=True).encode()).hexdigest()[:12]
+            default_id = st.session_state.get('selected_event', 'EVT-0903')
+            default_index = next((i for i, r in enumerate(visible) if r['id'] == default_id), 0)
+            selection = st.dataframe(register.style.map(severity_style, subset=['Severity']),
+                hide_index=True, width='stretch', height=min(425, 40 + 36 * len(visible)),
+                row_height=36, key=f'register_{workspace}_{round_number}_{signature}',
+                on_select='rerun', selection_mode='single-row',
+                selection_default={'selection': {'rows': [default_index], 'columns': [], 'cells': []}},
+                column_config={'Event': st.column_config.TextColumn(width='small'),
+                    'Severity': st.column_config.TextColumn(width='small'),
+                    'Alert summary': st.column_config.TextColumn(width='large')})
+            if selection.selection.rows:
+                st.session_state.selected_event = visible[selection.selection.rows[0]]['id']
+    with st.container(key='alert_detail'):
         if not visible:
             st.info('No alerts match the current filters.')
         else:
@@ -148,71 +162,48 @@ with alerts_tab:
                 st.markdown('#### Plain-English alert')
                 st.html(f'<p class="alert-copy">{escape(message)}</p>')
 
-            interpretation = st.session_state.setdefault('interpretation', {})
-            if can_write and (workspace == 'Rehearsal' or participant_view) and form_identity not in interpretation:
-                st.markdown('#### 1. Read the alert and answer')
-                if participant_view:
-                    st.caption('Read the wording above. The role baseline, badge, observed values and raw SHAP appear after these answers are recorded.')
-                else:
-                    st.caption('Practice view shows supporting evidence immediately. Use Participant view for the actual wording test.')
-                with st.form(f'interpret_{form_identity}'):
-                    count = row['records_accessed']
-                    count_answer = st.text_input('How many records were accessed?',
-                                                 placeholder='Enter a number or Not stated', max_chars=20).strip().casefold()
-                    department = row['department_accessed']
-                    departments = sorted({department, 'Medicine', 'Emergency', 'Admissions'})
-                    department_answer = st.selectbox('Which department was accessed?',
-                                                     [*departments, 'Not stated'], index=None)
-                    if st.form_submit_button('Lock answers and reveal evidence'):
-                        if (not re.fullmatch(r'[0-9]{1,10}|not stated', count_answer)
-                                or department_answer is None):
-                            st.error('Answer both questions before viewing the evidence.')
-                        else:
-                            interpretation[form_identity] = int(count_answer.isascii() and count_answer.isdecimal()
-                                                                and int(count_answer) == count and department_answer == department)
-                            st.rerun()
-            show_evidence = form_identity in interpretation or not participant_view
-            if show_evidence:
-                st.html(f'<span class="pill {severity}">{severity} severity</span>')
-                st.caption(f'{row["alert"]["template"]} · {row["date"]} at {row["login_time"]} · Score {row["score"]:.3f}')
-                facts = [('Records accessed', str(row['records_accessed'])),
-                         ('Accessed department', row['department_accessed']),
-                         ('Session duration', f'{row["session_duration_mins"]} min')]
-                st.html('<div class="case-summary">' + ''.join(
-                    f'<div><span>{escape(label)}</span><strong>{escape(value)}</strong></div>'
-                    for label, value in facts) + '</div>')
-                evidence = {key: row[key] for key in ('id', 'user_id', 'role', 'date', 'login_time',
-                            'records_accessed', 'session_duration_mins', 'department_accessed', 'assigned_department', 'score')}
-                evidence.update({'severity': severity, 'alert_version': version, 'alert_message': message,
-                                 'raw_shap': dict(zip(result['features'], (-value for value in row['shap']))),
-                                 'role_baseline': {'shift': policy[1:3], 'daily_range': policy[3:5],
-                                                   'mean_daily_records': row['baseline'], 'allowed_departments': policy[5]}})
-                st.download_button('Export case evidence', json.dumps(evidence, ensure_ascii=False, indent=2),
-                                   file_name=f'{row["id"]}-{version}.json', mime='application/json')
-                st.caption(f'Alert readability check · {len(re.findall(r"\b\w+\b", message))} words · read the alert before consulting the evidence below.')
-                with st.expander('Raw SHAP values and role baseline', expanded=True):
-                    c1, c2 = st.columns(2)
-                    with c1:
-                        shap_frame = pd.DataFrame({'Feature': result['features'],
-                           'Raw SHAP': [-value for value in row['shap']],
-                           'Level': [row['alert']['levels'][f] for f in result['features']]})
-                        st.dataframe(shap_frame.sort_values('Raw SHAP').style.format({'Raw SHAP': '{:+.6f}'}),
-                                     hide_index=True, width='stretch')
-                        st.caption('Raw SHAP explains path length. More negative values support anomaly. Levels use the opposite sign.')
-                    with c2:
-                        _, start, end, lo, hi, depts = policy
-                        st.markdown('**Expected workflow**')
-                        st.write(f'{start:02}:00–{end:02}:00 · {lo}–{hi} records/day')
-                        st.write(f'Mean {row["baseline"]:.2f} records/day · {", ".join(depts)}')
-                        st.markdown('**Observed event**')
-                        st.write(f'{row["user_id"]} · {row["records_accessed"]} records · {row["session_duration_mins"]} min')
-                        st.write(f'Accessed {row["department_accessed"]} · assigned {row["assigned_department"]}')
-            if can_write and form_identity in interpretation:
+            st.html(f'<span class="pill {severity}">{severity} severity</span>')
+            st.caption(f'{row["alert"]["template"]} · {row["date"]} at {row["login_time"]} · Score {row["score"]:.3f}')
+            facts = [('Records accessed', str(row['records_accessed'])),
+                     ('Accessed department', row['department_accessed']),
+                     ('Session duration', f'{row["session_duration_mins"]} min')]
+            st.html('<div class="case-summary">' + ''.join(
+                f'<div><span>{escape(label)}</span><strong>{escape(value)}</strong></div>'
+                for label, value in facts) + '</div>')
+            evidence = {key: row[key] for key in ('id', 'user_id', 'role', 'date', 'login_time',
+                        'records_accessed', 'session_duration_mins', 'department_accessed', 'assigned_department', 'score')}
+            evidence.update({'severity': severity, 'alert_version': version, 'alert_message': message,
+                             'raw_shap': dict(zip(result['features'], (-value for value in row['shap']))),
+                             'role_baseline': {'shift': policy[1:3], 'daily_range': policy[3:5],
+                                               'mean_daily_records': row['baseline'], 'allowed_departments': policy[5]}})
+            st.download_button('Export case evidence', json.dumps(evidence, ensure_ascii=False, indent=2),
+                               file_name=f'{row["id"]}-{version}.json', mime='application/json')
+            st.caption(f'Alert readability check · {len(re.findall(r"\b\w+\b", message))} words · read the alert before consulting the evidence below.')
+            with st.expander('Raw SHAP values and role baseline', expanded=True):
+                c1, c2 = st.columns(2)
+                with c1:
+                    shap_frame = pd.DataFrame({'Feature': result['features'],
+                       'Raw SHAP': [-value for value in row['shap']],
+                       'Level': [row['alert']['levels'][f] for f in result['features']]})
+                    st.dataframe(shap_frame.sort_values('Raw SHAP').style.format({'Raw SHAP': '{:+.6f}'}),
+                                 hide_index=True, width='stretch')
+                    st.caption('Raw SHAP explains path length. More negative values support anomaly. Levels use the opposite sign.')
+                with c2:
+                    _, start, end, lo, hi, depts = policy
+                    st.markdown('**Expected workflow**')
+                    st.write(f'{start:02}:00–{end:02}:00 · {lo}–{hi} records/day')
+                    st.write(f'Mean {row["baseline"]:.2f} records/day · {", ".join(depts)}')
+                    st.markdown('**Observed event**')
+                    st.write(f'{row["user_id"]} · {row["records_accessed"]} records · {row["session_duration_mins"]} min')
+                    st.write(f'Accessed {row["department_accessed"]} · assigned {row["assigned_department"]}')
+            if can_write:
                 with st.container(key='feedback_panel'):
                     st.markdown('<div class="sectiontag">03 / IT REVIEW</div>', unsafe_allow_html=True)
-                    st.markdown('#### 2. Rate this alert')
+                    st.markdown('#### Rate this alert')
+                    st.caption(f'Feedback is automatically linked to {event_id} · {round_name}. Use the same reviewer code in both rounds.')
                     with st.form(f'feedback_{form_identity}'):
-                        reviewer = st.text_input('Reviewer code', max_chars=32, placeholder='e.g. IT01')
+                        reviewer = st.text_input('Reviewer code', max_chars=32, placeholder='e.g. IT01',
+                                                 value=st.session_state.get(f'last_reviewer_{workspace}', ''))
                         st.caption('Scale: 1 strongly disagree · 5 strongly agree')
                         left, right = st.columns(2)
                         ratings = {key: (left if i % 2 == 0 else right).selectbox(label, [1, 2, 3, 4, 5], index=None)
@@ -232,11 +223,11 @@ with alerts_tab:
                                             raise ValueError('The alert changed while you were reviewing it. Reopen the case and rate the current version.')
                                         save_feedback(FEEDBACK, dict(reviewer=reviewer.strip().casefold(), event=event_id,
                                             round=round_number, version=version, severity=severity, template=row['alert']['template'],
-                                            **ratings, interpretation_correct=interpretation[form_identity], comment=safe_comment))
+                                            **ratings, interpretation_correct='', comment=safe_comment))
                                 except (OSError, TimeoutError, ValueError) as exc:
                                     st.error(f'Could not save feedback: {exc}')
                                 else:
-                                    interpretation.pop(form_identity, None)
+                                    st.session_state[f'last_reviewer_{workspace}'] = reviewer.strip()
                                     st.session_state['saved_feedback'] = f'Saved {round_name} feedback for {event_id} in {workspace}.'
                                     st.rerun()
 
@@ -248,6 +239,25 @@ with evaluation_tab:
     st.caption('250 synthetic events · 25 injected anomalies · 0.75 operating threshold')
     for column, label, value in zip(st.columns(5), SCORE_LABELS, result['metrics']):
         column.metric(label, f'{value:.3f}' if label == 'ROC-AUC' else f'{value:.1%}')
+    tn, fp = result['cm'][0]
+    fn, tp = result['cm'][1]
+    st.info(f'Precision and accuracy measure different things. This run has {tp} detected anomalies, '
+            f'{fp} false alarms, {fn} missed anomalies and {tn} correctly cleared normal events. '
+            'An always-normal prediction would already achieve 90% accuracy here while missing every anomaly.')
+    st.caption('Synthetic scenarios are easily separated. These results describe this test set; they are not hospital validation. '
+               'Labels are used for evaluation only. The anomaly score is a relative index, not a probability.')
+    with st.expander('Metric definitions and reproducibility'):
+        st.markdown('- **Precision** — of the events flagged, how many were injected anomalies?\n'
+                    '- **Recall** — of all injected anomalies, how many were flagged?\n'
+                    '- **F1** — harmonic mean of precision and recall.\n'
+                    '- **Accuracy** — correct decisions across normal and anomalous events.\n'
+                    '- **ROC-AUC** — ranking performance across thresholds using raw continuous scores.')
+        st.json(result['metadata'])
+        st.caption('The split is deterministic and interleaved. Users may appear in training and test data. '
+                   'This benchmark does not test generalization to new users or future hospital activity.')
+    st.download_button('Download benchmark evidence',
+        json.dumps({k: result[k] for k in ('metadata', 'metrics', 'cm', 'test_predictions')}, indent=2),
+        'benchmark_evidence.json', 'application/json')
     charts = st.columns(2)
     with charts[0]:
         st.markdown('**ROC curve · continuous raw scores**')
@@ -277,6 +287,28 @@ with evaluation_tab:
         st.altair_chart(alt.Chart(factors).mark_bar(color='#126754').encode(
             x='Mean absolute SHAP:Q', y=alt.Y('Feature:N', sort='-x'), tooltip=list(factors)), width='stretch')
 
+with research_tab:
+    st.subheader('Research context')
+    st.markdown('This project focuses on translating technical anomaly explanations into understandable alerts, '
+                'then refining the wording using reviewer feedback. Detection performance and explanation usefulness are evaluated separately.')
+    st.warning('These published results use different data and methods. The table provides context; '
+               'it cannot establish that this prototype is better or worse. A fair performance comparison needs the same dataset, labels and test protocol.')
+    st.dataframe(pd.DataFrame(comparison_rows(result)), hide_index=True, width='stretch')
+    for ref in REFERENCES:
+        with st.expander(ref['citation'] + ' · ' + ref['title']):
+            st.write(ref['relevance'])
+            if ref.get('location'):
+                st.caption('Reported values from ' + ref['location'] + '. Not independently reproduced.')
+            st.link_button('Open original study', ref['url'])
+    st.markdown('**What the reviewer study can show**')
+    st.write('The five ratings measure perceived clarity, completeness, severity fit, trust and clarity relative to raw SHAP. '
+             'Matched Round 1 and Round 2 responses can describe changes after a wording revision. '
+             'Actual improvement remains unproven until reviewers submit responses. No recall questions are required.')
+    st.caption('Candidate references checked 11 November 2026. Add the supervisor-approved papers when supplied. '
+               'Metrics remain calculated from the model; no target percentage is imposed.')
+    st.download_button('Download evaluation and research note', evaluation_report(result),
+                       'evaluation_and_research_context.md', 'text/markdown')
+
 with policy_tab:
     st.subheader('Expected workflow by role')
     st.dataframe(pd.DataFrame([{'Role': role, 'Shift': f'{start:02}:00–{end:02}:00',
@@ -290,7 +322,13 @@ with study_tab:
         st.info('No study responses have been collected yet.')
     else:
         frame = pd.DataFrame(feedback)
-        measures = [*RATINGS, 'interpretation_correct']
+        protocols = {'direct-review-v2': 'Direct alert review (current)', 'quiz-v1': 'Earlier quiz-based review'}
+        protocol = st.selectbox('Survey protocol', list(protocols), format_func=protocols.get,
+                               help='Keep feedback collected under different review procedures separate.')
+        frame = frame[frame['survey_protocol'] == protocol].copy()
+        st.caption(f'{len(frame)} responses under this protocol. Matched results use this protocol in both rounds.')
+        measures = list(RATINGS)
+        st.caption('These are self-reported 1–5 ratings. They do not measure model accuracy or objectively prove comprehension. Legacy quiz answers remain in the CSV but are excluded from this summary.')
         frame[measures] = frame[measures].replace('', None).apply(pd.to_numeric)
         round_1 = frame[frame['round'] == '1']
         round_2 = frame[frame['round'] == '2']
@@ -314,8 +352,9 @@ with study_tab:
                     'Change': changed[f'{m}_2'].mean() - changed[f'{m}_1'].mean()} for m in measures]).round(3),
                     hide_index=True)
         st.markdown('**Response register**')
-        st.dataframe(frame[['reviewer', 'event', 'round', 'version', 'clarity', 'interpretation_correct', 'comment']],
+        st.dataframe(frame[['reviewer', 'event', 'round', 'version', 'clarity', 'shap_clarity', 'comment']],
                      hide_index=True, width='stretch')
+        st.caption('The CSV export includes every protocol. Use the survey_protocol column when analyzing it.')
         st.download_button('Download feedback CSV', FEEDBACK.read_bytes(), 'feedback.csv', 'text/csv')
 
 with revisions_tab:
