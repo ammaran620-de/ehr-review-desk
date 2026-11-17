@@ -2,6 +2,22 @@
           
 Local Streamlit dashboard for reviewing unusual access patterns in synthetic electronic health record data. It generates 1,000 synthetic events, fits Isolation Forest, and displays plain-English alerts with Tree SHAP evidence and role baselines.
 
+[![tests](https://github.com/ammaran620-de/ehr-review-desk/actions/workflows/tests.yml/badge.svg)](https://github.com/ammaran620-de/ehr-review-desk/actions/workflows/tests.yml)
+
+**Scope.** Everything here runs on synthetic data: 1,000 generated events, no patient identifiers, and no claim about real hospitals. Alert scores come from Isolation Forest and are not calibrated probabilities. The detection numbers cover the included synthetic set only (see Benchmark scope below).
+
+## Quick start (macOS, Linux)
+
+Use Python 3.12.
+
+```bash
+python3.12 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/streamlit run app.py
+```
+
+Then open the address Streamlit prints, usually `http://127.0.0.1:8501`. Run the checks with `.venv/bin/python -m unittest discover -s tests -v`. The test suite has 10 tests, and the app was started and answered its health check on Linux. Windows users can use the launcher below.
+
 ## Start on Windows
 
 Extract the whole ZIP into a writable folder. With 64-bit Python 3.12 installed, double-click `Start_EHR_Review_Desk.cmd`. The launcher reuses a working `.venv312` and can find Python through the Windows launcher, standard installation paths, or a Python 3.12 command on PATH. The first dependency installation requires internet access.
