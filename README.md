@@ -16,7 +16,7 @@ python3.12 -m venv .venv
 .venv/bin/streamlit run app.py
 ```
 
-Then open the address Streamlit prints, usually `http://127.0.0.1:8501`. Run the checks with `.venv/bin/python -m unittest discover -s tests -v`. The test suite has 10 tests, and the app was started and answered its health check on Linux. Windows users can use the launcher below.
+Then open the address Streamlit prints, usually `http://127.0.0.1:8501`. Run the checks with `.venv/bin/python -m unittest discover -s tests -v`. The suite covers benchmark arithmetic, unsupervised fitting, user separation, dataset isolation and reviewer workflows. Windows users can use the launcher below.
 
 ## Start on Windows
 
@@ -52,18 +52,26 @@ If the existing `.venv312` is damaged, rename it before rebuilding. For an insta
 
 ## Storage and recovery
 
-- Rehearsal uses `data/rehearsal/`. The real study uses `data/study/`. Each workspace has its own `feedback.csv` and `revisions.json`, created as needed.
+- **Original demonstration** keeps `data/rehearsal/` and `data/study/` unchanged. **Realistic access patterns** uses `data/realistic-v1-<dataset-hash>/rehearsal/` and `/study/`. Each workspace has its own feedback and revisions. A changed dataset gets a different folder. Do not combine responses across these datasets. New CSV rows carry `benchmark_id` and `dataset_sha256`; older original CSVs remain readable.
 - The ZIP starts with both workspaces empty. Older releases stored data in the root folder. Keep those files as archives and do not copy them into a new research workspace. Their responses predate version and questionnaire fixes.
 - CSV responses are unique per reviewer code, case and round. Resubmitting a valid response for the same combination replaces the previous one. Keep backups of both files together when moving the study.
 - If a file fails validation, the app reports the file and keeps the benchmark available. Writes for the affected workspace pause. Close the app, make a copy of the original file, restore a verified backup or repair the file, and reopen the app. Rehearsal and research data remain separate during recovery.
 
 ## Benchmark scope
 
-The data contains no patient identifiers. Evaluation is on 250 held-out synthetic events with 25 injected anomalies. ROC-AUC uses continuous raw scores and the confusion matrix uses the configured threshold of 0.75. These metrics apply to the included synthetic dataset. Run `python pipeline.py` using the configured virtual environment to export the data and benchmark output.
+The dashboard defaults to **Realistic access patterns (v1)**. Its fixed primary run uses seed 42, 1,000 events (900 legitimate/100 injected anomalies), 36 legitimate workflow exceptions and 25 subtle anomalies. GroupShuffleSplit holds out 19 of 75 users: 745 training events and 255 test events, including 27 anomalies. Test users do not appear in training. Labels and simulation context are excluded from fitting and splitting.
 
-The primary research focus is the translation and review of technical explanations. Published detection numbers in **Research context** are transcribed from different studies and cannot establish superiority on different datasets. Metrics are never capped or changed to meet a desired range. An always-normal reference already reaches 90% accuracy on this 90/10 test set, so anomaly precision, recall and the confusion matrix must be considered. The score is a relative anomaly index, not a probability.
+Measured primary results: **96.86% accuracy, 91.30% precision, 77.78% recall, 84.00% F1 and 0.9763 ROC-AUC**. Confusion matrix: TN 226, FP 2, FN 6, TP 21. The always-normal reference has 89.41% accuracy and zero anomaly recall. The protocol was configured before its metrics were inspected and remains fixed even though its primary accuracy is outside a desired 93–95% range. It is a documented development simulation, not a registered or blind hospital experiment.
 
-The deterministic split can include the same users in training and test partitions. The synthetic anomalies are easily separable and no real-hospital generalization claim is supported. Candidate references are listed in [RESEARCH_CONTEXT.md](RESEARCH_CONTEXT.md); the client's supervisor-approved papers can be added when supplied.
+All configured seeds 42–46 are retained in the dashboard and [evaluation evidence](evaluations/realistic-v1.json). Their accuracy ranges from 94.05% to 97.23%. These are complete synthetic sensitivity results, not justification to select a more convenient seed. See [REALISTIC_PROTOCOL.md](REALISTIC_PROTOCOL.md) for assumptions. Rebuild the evidence with `python evaluate_benchmarks.py`.
+
+**Original demonstration (v1)** remains selectable and preserves the original data, events, scores and feedback. Its 250-event test set has 25 anomalies and 98.8% accuracy; users overlap between training and test. The two datasets differ, so a lower or higher metric across them is not evidence of model improvement.
+
+Both use Isolation Forest without training labels, Tree SHAP, the fixed threshold >0.75 and raw-score ROC-AUC. The displayed score is a relative anomaly index, not a calibrated probability. `python pipeline.py` exports the realistic benchmark; use `python pipeline.py --benchmark reference-v1` for the original. Calling `run_pipeline()` without arguments retains the original benchmark for existing integrations.
+
+The research focus is understandable alerts and reviewer feedback. [RESEARCH_CONTEXT.md](RESEARCH_CONTEXT.md) lists recent references including Chua (2024, 93% accuracy on web logs) and Abengowe (published 2025, Linear SVC 92% in Table 2 but 93% in prose; other models reach 98%). Their data differs from ours. Higher reported EHR results remain visible too. The IEEE BigData 2025 abstract describes human-readable EHR rationales, but no unverified accuracy is assigned to it. The older 2019 SHAP study is labelled as foundational background rather than a recent numerical comparator.
+
+Neither numerical superiority over these papers nor real-hospital performance has been demonstrated. A same-data comparison and actual reviewer evidence are required. Patient data is not used.
 
 ## Hosted reviewer preview
 

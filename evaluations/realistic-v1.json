@@ -1,0 +1,2210 @@
+{
+  "metadata": {
+    "benchmark_id": "realistic-v1",
+    "benchmark_name": "Realistic access patterns",
+    "seed": 42,
+    "n_estimators": 120,
+    "threshold": 0.75,
+    "threshold_operator": ">",
+    "training_count": 745,
+    "test_count": 255,
+    "test_anomalies": 27,
+    "test_normal": 228,
+    "majority_accuracy": 0.8941176470588236,
+    "legitimate_exception_count": 36,
+    "subtle_anomaly_count": 25,
+    "split": "GroupShuffleSplit by user; 25% of users held out",
+    "train_users": [
+      "USR_002",
+      "USR_003",
+      "USR_004",
+      "USR_007",
+      "USR_008",
+      "USR_009",
+      "USR_012",
+      "USR_014",
+      "USR_015",
+      "USR_016",
+      "USR_017",
+      "USR_018",
+      "USR_020",
+      "USR_021",
+      "USR_022",
+      "USR_024",
+      "USR_025",
+      "USR_026",
+      "USR_027",
+      "USR_028",
+      "USR_030",
+      "USR_031",
+      "USR_032",
+      "USR_033",
+      "USR_037",
+      "USR_038",
+      "USR_039",
+      "USR_040",
+      "USR_041",
+      "USR_042",
+      "USR_044",
+      "USR_045",
+      "USR_046",
+      "USR_047",
+      "USR_048",
+      "USR_049",
+      "USR_051",
+      "USR_052",
+      "USR_053",
+      "USR_054",
+      "USR_055",
+      "USR_056",
+      "USR_058",
+      "USR_059",
+      "USR_060",
+      "USR_061",
+      "USR_063",
+      "USR_066",
+      "USR_067",
+      "USR_068",
+      "USR_069",
+      "USR_071",
+      "USR_072",
+      "USR_073",
+      "USR_074",
+      "USR_075"
+    ],
+    "test_users": [
+      "USR_001",
+      "USR_005",
+      "USR_006",
+      "USR_010",
+      "USR_011",
+      "USR_013",
+      "USR_019",
+      "USR_023",
+      "USR_029",
+      "USR_034",
+      "USR_035",
+      "USR_036",
+      "USR_043",
+      "USR_050",
+      "USR_057",
+      "USR_062",
+      "USR_064",
+      "USR_065",
+      "USR_070"
+    ],
+    "user_overlap": false,
+    "score": "Training-normalized anomaly index; not a probability",
+    "normalization_min": 0.3530374829976383,
+    "normalization_p95": 0.5940407475016396,
+    "labels_used_for_fit": false,
+    "labels_used_for_split": false,
+    "dataset_sha256": "4aa9da99a7ce089575e862dd5bd13c934a4db3a3d2611669d9df73e397676971",
+    "packages": {
+      "numpy": "2.3.5",
+      "scikit-learn": "1.8.0",
+      "shap": "0.54.1"
+    }
+  },
+  "metrics": [
+    0.9130434782608695,
+    0.7777777777777778,
+    0.84,
+    0.9686274509803922,
+    0.9762833008447043
+  ],
+  "cm": [
+    [
+      226,
+      2
+    ],
+    [
+      6,
+      21
+    ]
+  ],
+  "test_predictions": [
+    {
+      "event": "EVT-0001",
+      "user": "USR_001",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.2306267932157864,
+      "raw_score": 0.4086192930447321
+    },
+    {
+      "event": "EVT-0005",
+      "user": "USR_005",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1612438352784372,
+      "raw_score": 0.39189777368088713
+    },
+    {
+      "event": "EVT-0006",
+      "user": "USR_006",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.2969106976835098,
+      "raw_score": 0.4245939304055248
+    },
+    {
+      "event": "EVT-0010",
+      "user": "USR_010",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1127778273231782,
+      "raw_score": 0.3802173075461928
+    },
+    {
+      "event": "EVT-0011",
+      "user": "USR_011",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.2903026375005546,
+      "raw_score": 0.42300136632939367
+    },
+    {
+      "event": "EVT-0013",
+      "user": "USR_013",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1561200355543229,
+      "raw_score": 0.3906629212207109
+    },
+    {
+      "event": "EVT-0019",
+      "user": "USR_019",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.0,
+      "raw_score": 0.3530287667521686
+    },
+    {
+      "event": "EVT-0023",
+      "user": "USR_023",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.08238664814856227,
+      "raw_score": 0.37289293415298436
+    },
+    {
+      "event": "EVT-0029",
+      "user": "USR_029",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1816414495435766,
+      "raw_score": 0.3968136653068791
+    },
+    {
+      "event": "EVT-0034",
+      "user": "USR_034",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.06732955704495519,
+      "raw_score": 0.3692641260430809
+    },
+    {
+      "event": "EVT-0035",
+      "user": "USR_035",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.13128459882877766,
+      "raw_score": 0.3846774998944719
+    },
+    {
+      "event": "EVT-0036",
+      "user": "USR_036",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.12542293773990193,
+      "raw_score": 0.3832648204366368
+    },
+    {
+      "event": "EVT-0043",
+      "user": "USR_043",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.011175378737451398,
+      "raw_score": 0.3557307857554327
+    },
+    {
+      "event": "EVT-0050",
+      "user": "USR_050",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.11470885575429599,
+      "raw_score": 0.38068269170194224
+    },
+    {
+      "event": "EVT-0057",
+      "user": "USR_057",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.23590108393165982,
+      "raw_score": 0.40989041432520074
+    },
+    {
+      "event": "EVT-0062",
+      "user": "USR_062",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.37524849675635374,
+      "raw_score": 0.4434735957161387
+    },
+    {
+      "event": "EVT-0064",
+      "user": "USR_064",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.06605247422593917,
+      "raw_score": 0.36895634491465606
+    },
+    {
+      "event": "EVT-0065",
+      "user": "USR_065",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.2100609663578122,
+      "raw_score": 0.40366286163473625
+    },
+    {
+      "event": "EVT-0070",
+      "user": "USR_070",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.03473256809294942,
+      "raw_score": 0.36140814529264664
+    },
+    {
+      "event": "EVT-0076",
+      "user": "USR_001",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.07730099623609998,
+      "raw_score": 0.37166727543994993
+    },
+    {
+      "event": "EVT-0080",
+      "user": "USR_005",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.08749920805055263,
+      "raw_score": 0.3741250777793363
+    },
+    {
+      "event": "EVT-0081",
+      "user": "USR_006",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.19206783272554162,
+      "raw_score": 0.3993264576907023
+    },
+    {
+      "event": "EVT-0085",
+      "user": "USR_010",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.09767460383480153,
+      "raw_score": 0.37657738138096053
+    },
+    {
+      "event": "EVT-0086",
+      "user": "USR_011",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.4979744157866975,
+      "raw_score": 0.4730509428417053
+    },
+    {
+      "event": "EVT-0088",
+      "user": "USR_013",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.04224602866378532,
+      "raw_score": 0.3632189138179402
+    },
+    {
+      "event": "EVT-0094",
+      "user": "USR_019",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1078737121444607,
+      "raw_score": 0.3790353997786183
+    },
+    {
+      "event": "EVT-0098",
+      "user": "USR_023",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.13741582066755145,
+      "raw_score": 0.3861551443730146
+    },
+    {
+      "event": "EVT-0104",
+      "user": "USR_029",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.17123989920292126,
+      "raw_score": 0.39430685771887847
+    },
+    {
+      "event": "EVT-0109",
+      "user": "USR_034",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.14831357783020524,
+      "raw_score": 0.38878153942498606
+    },
+    {
+      "event": "EVT-0110",
+      "user": "USR_035",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.02154080620607053,
+      "raw_score": 0.35822888761334937
+    },
+    {
+      "event": "EVT-0111",
+      "user": "USR_036",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.15978832632344026,
+      "raw_score": 0.39154699127121806
+    },
+    {
+      "event": "EVT-0118",
+      "user": "USR_043",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.05106089457618012,
+      "raw_score": 0.3653433252789924
+    },
+    {
+      "event": "EVT-0125",
+      "user": "USR_050",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.0259415261734688,
+      "raw_score": 0.3592894754916603
+    },
+    {
+      "event": "EVT-0132",
+      "user": "USR_057",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.021218275946295728,
+      "raw_score": 0.3581511567678423
+    },
+    {
+      "event": "EVT-0137",
+      "user": "USR_062",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.10268304825688979,
+      "raw_score": 0.37778443283677066
+    },
+    {
+      "event": "EVT-0139",
+      "user": "USR_064",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.23396821940672358,
+      "raw_score": 0.40942458766484713
+    },
+    {
+      "event": "EVT-0140",
+      "user": "USR_065",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.05528854374888286,
+      "raw_score": 0.3663622025307914
+    },
+    {
+      "event": "EVT-0145",
+      "user": "USR_070",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.03776674619772613,
+      "raw_score": 0.3621393921209844
+    },
+    {
+      "event": "EVT-0151",
+      "user": "USR_001",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.3561562847806545,
+      "raw_score": 0.4388723103033928
+    },
+    {
+      "event": "EVT-0155",
+      "user": "USR_005",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.07347795205475524,
+      "raw_score": 0.3707459093119028
+    },
+    {
+      "event": "EVT-0156",
+      "user": "USR_006",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.18046610228565074,
+      "raw_score": 0.39653040278079316
+    },
+    {
+      "event": "EVT-0160",
+      "user": "USR_010",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.054887622051073205,
+      "raw_score": 0.36626557909280877
+    },
+    {
+      "event": "EVT-0161",
+      "user": "USR_011",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.3311238212075603,
+      "raw_score": 0.4328394048636996
+    },
+    {
+      "event": "EVT-0163",
+      "user": "USR_013",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.047051589018884815,
+      "raw_score": 0.3643770695512902
+    },
+    {
+      "event": "EVT-0169",
+      "user": "USR_019",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.04084986092800626,
+      "raw_score": 0.3628824328358223
+    },
+    {
+      "event": "EVT-0173",
+      "user": "USR_023",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.11408110911024573,
+      "raw_score": 0.3805314027114447
+    },
+    {
+      "event": "EVT-0179",
+      "user": "USR_029",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1769692518530145,
+      "raw_score": 0.3956876504110456
+    },
+    {
+      "event": "EVT-0184",
+      "user": "USR_034",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.14663221158946363,
+      "raw_score": 0.3883763246721405
+    },
+    {
+      "event": "EVT-0185",
+      "user": "USR_035",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.0897185683642413,
+      "raw_score": 0.3746599508600459
+    },
+    {
+      "event": "EVT-0186",
+      "user": "USR_036",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.16313326672968453,
+      "raw_score": 0.3923531328286943
+    },
+    {
+      "event": "EVT-0193",
+      "user": "USR_043",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.06778309900238927,
+      "raw_score": 0.36937343113541204
+    },
+    {
+      "event": "EVT-0200",
+      "user": "USR_050",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.10293252427896094,
+      "raw_score": 0.3778445573725053
+    },
+    {
+      "event": "EVT-0207",
+      "user": "USR_057",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.031205998850774477,
+      "raw_score": 0.3605582305927831
+    },
+    {
+      "event": "EVT-0212",
+      "user": "USR_062",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.023437464723212013,
+      "raw_score": 0.3586859885076298
+    },
+    {
+      "event": "EVT-0214",
+      "user": "USR_064",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1358976216550658,
+      "raw_score": 0.38578925345483883
+    },
+    {
+      "event": "EVT-0215",
+      "user": "USR_065",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.05054855934570101,
+      "raw_score": 0.3652198508159265
+    },
+    {
+      "event": "EVT-0220",
+      "user": "USR_070",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.17353851099088385,
+      "raw_score": 0.39486083066360483
+    },
+    {
+      "event": "EVT-0226",
+      "user": "USR_001",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.02999412853531703,
+      "raw_score": 0.36026616589060234
+    },
+    {
+      "event": "EVT-0230",
+      "user": "USR_005",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.20632309552395034,
+      "raw_score": 0.40276202256148125
+    },
+    {
+      "event": "EVT-0231",
+      "user": "USR_006",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.09901356942979805,
+      "raw_score": 0.37690007646041324
+    },
+    {
+      "event": "EVT-0235",
+      "user": "USR_010",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.14707808513810672,
+      "raw_score": 0.38848378165291947
+    },
+    {
+      "event": "EVT-0236",
+      "user": "USR_011",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.24711048211593875,
+      "raw_score": 0.4125919158807372
+    },
+    {
+      "event": "EVT-0238",
+      "user": "USR_013",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.15817776734995095,
+      "raw_score": 0.3911588413009309
+    },
+    {
+      "event": "EVT-0244",
+      "user": "USR_019",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.014922345270795325,
+      "raw_score": 0.35663381692195584
+    },
+    {
+      "event": "EVT-0248",
+      "user": "USR_023",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.13583251564918927,
+      "raw_score": 0.3857735626948838
+    },
+    {
+      "event": "EVT-0254",
+      "user": "USR_029",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1486172094859663,
+      "raw_score": 0.3888547156452312
+    },
+    {
+      "event": "EVT-0259",
+      "user": "USR_034",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.08174694076219294,
+      "raw_score": 0.372738762584542
+    },
+    {
+      "event": "EVT-0260",
+      "user": "USR_035",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.08524265639723404,
+      "raw_score": 0.3735812414643646
+    },
+    {
+      "event": "EVT-0261",
+      "user": "USR_036",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.03893818559979323,
+      "raw_score": 0.3624217128410512
+    },
+    {
+      "event": "EVT-0268",
+      "user": "USR_043",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.2005202668054828,
+      "raw_score": 0.401363521896973
+    },
+    {
+      "event": "EVT-0275",
+      "user": "USR_050",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.10322479220972267,
+      "raw_score": 0.3779149948979287
+    },
+    {
+      "event": "EVT-0282",
+      "user": "USR_057",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.10232251252107691,
+      "raw_score": 0.3776975425474694
+    },
+    {
+      "event": "EVT-0287",
+      "user": "USR_062",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.18652350981123528,
+      "raw_score": 0.39799025776889013
+    },
+    {
+      "event": "EVT-0289",
+      "user": "USR_064",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.05536709249588346,
+      "raw_score": 0.3663811330352412
+    },
+    {
+      "event": "EVT-0290",
+      "user": "USR_065",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.10315065629422589,
+      "raw_score": 0.37789712790027696
+    },
+    {
+      "event": "EVT-0295",
+      "user": "USR_070",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.08731651494905358,
+      "raw_score": 0.37408104814547266
+    },
+    {
+      "event": "EVT-0301",
+      "user": "USR_001",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.023649776481314642,
+      "raw_score": 0.3587371563344251
+    },
+    {
+      "event": "EVT-0305",
+      "user": "USR_005",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.2515256562598777,
+      "raw_score": 0.41365598726278013
+    },
+    {
+      "event": "EVT-0306",
+      "user": "USR_006",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.05911558770702547,
+      "raw_score": 0.36728453261810406
+    },
+    {
+      "event": "EVT-0310",
+      "user": "USR_010",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1367296044493917,
+      "raw_score": 0.38598976402428253
+    },
+    {
+      "event": "EVT-0311",
+      "user": "USR_011",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.028911998204496043,
+      "raw_score": 0.3600053689482557
+    },
+    {
+      "event": "EVT-0313",
+      "user": "USR_013",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1261066019752564,
+      "raw_score": 0.38342958574918184
+    },
+    {
+      "event": "EVT-0319",
+      "user": "USR_019",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.09795541967431341,
+      "raw_score": 0.3766450589150073
+    },
+    {
+      "event": "EVT-0323",
+      "user": "USR_023",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1670021748037578,
+      "raw_score": 0.3932855523046118
+    },
+    {
+      "event": "EVT-0329",
+      "user": "USR_029",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.16273851364532152,
+      "raw_score": 0.39225799604668976
+    },
+    {
+      "event": "EVT-0334",
+      "user": "USR_034",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.06976770948158835,
+      "raw_score": 0.3698517287396679
+    },
+    {
+      "event": "EVT-0335",
+      "user": "USR_035",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.14506526471639344,
+      "raw_score": 0.38799868536042625
+    },
+    {
+      "event": "EVT-0336",
+      "user": "USR_036",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.11251671726731036,
+      "raw_score": 0.38015437917033384
+    },
+    {
+      "event": "EVT-0343",
+      "user": "USR_043",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1516036591583187,
+      "raw_score": 0.38957445976554506
+    },
+    {
+      "event": "EVT-0350",
+      "user": "USR_050",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.23662144784816364,
+      "raw_score": 0.41006402438070905
+    },
+    {
+      "event": "EVT-0357",
+      "user": "USR_057",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.06437514021789978,
+      "raw_score": 0.368552101943055
+    },
+    {
+      "event": "EVT-0362",
+      "user": "USR_062",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.09442063171677893,
+      "raw_score": 0.3757931634779121
+    },
+    {
+      "event": "EVT-0364",
+      "user": "USR_064",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1686420499899242,
+      "raw_score": 0.393680767577857
+    },
+    {
+      "event": "EVT-0365",
+      "user": "USR_065",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.24630021380030087,
+      "raw_score": 0.4123966385715443
+    },
+    {
+      "event": "EVT-0370",
+      "user": "USR_070",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.26496394839245446,
+      "raw_score": 0.41689465953608956
+    },
+    {
+      "event": "EVT-0376",
+      "user": "USR_001",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.3104297689571066,
+      "raw_score": 0.4278520707155239
+    },
+    {
+      "event": "EVT-0380",
+      "user": "USR_005",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.2274538374219355,
+      "raw_score": 0.40785460034028714
+    },
+    {
+      "event": "EVT-0381",
+      "user": "USR_006",
+      "actual": 0,
+      "predicted": 1,
+      "score": 0.9562807176957456,
+      "raw_score": 0.5835042577445423
+    },
+    {
+      "event": "EVT-0385",
+      "user": "USR_010",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.19936022583586235,
+      "raw_score": 0.4010839482363361
+    },
+    {
+      "event": "EVT-0386",
+      "user": "USR_011",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.12490355294141453,
+      "raw_score": 0.38313964700466757
+    },
+    {
+      "event": "EVT-0388",
+      "user": "USR_013",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.13976298012500663,
+      "raw_score": 0.38672081746457276
+    },
+    {
+      "event": "EVT-0394",
+      "user": "USR_019",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.17670384419714338,
+      "raw_score": 0.3956236862995563
+    },
+    {
+      "event": "EVT-0398",
+      "user": "USR_023",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.15923889028977306,
+      "raw_score": 0.39141457539346813
+    },
+    {
+      "event": "EVT-0404",
+      "user": "USR_029",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.5876831006890205,
+      "raw_score": 0.49467102875752594
+    },
+    {
+      "event": "EVT-0409",
+      "user": "USR_034",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.0597838849120831,
+      "raw_score": 0.36744559442618185
+    },
+    {
+      "event": "EVT-0410",
+      "user": "USR_035",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1861206246669187,
+      "raw_score": 0.3978931611338897
+    },
+    {
+      "event": "EVT-0411",
+      "user": "USR_036",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1233341878957684,
+      "raw_score": 0.3827614249054684
+    },
+    {
+      "event": "EVT-0418",
+      "user": "USR_043",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.05082523873242813,
+      "raw_score": 0.3652865314513487
+    },
+    {
+      "event": "EVT-0425",
+      "user": "USR_050",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.0877868847988434,
+      "raw_score": 0.37419440881479626
+    },
+    {
+      "event": "EVT-0432",
+      "user": "USR_057",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.029009766104653226,
+      "raw_score": 0.36002893133135727
+    },
+    {
+      "event": "EVT-0437",
+      "user": "USR_062",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1136031594630374,
+      "raw_score": 0.38041621528619896
+    },
+    {
+      "event": "EVT-0439",
+      "user": "USR_064",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.188454326135783,
+      "raw_score": 0.39845559080626375
+    },
+    {
+      "event": "EVT-0440",
+      "user": "USR_065",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.12409957026375304,
+      "raw_score": 0.3829458845547465
+    },
+    {
+      "event": "EVT-0445",
+      "user": "USR_070",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.16659511736341565,
+      "raw_score": 0.3931874501326487
+    },
+    {
+      "event": "EVT-0451",
+      "user": "USR_001",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1955442817649253,
+      "raw_score": 0.40016429325807557
+    },
+    {
+      "event": "EVT-0455",
+      "user": "USR_005",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.050499924813600786,
+      "raw_score": 0.3652081297349227
+    },
+    {
+      "event": "EVT-0456",
+      "user": "USR_006",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1522473431025477,
+      "raw_score": 0.38972958969741306
+    },
+    {
+      "event": "EVT-0460",
+      "user": "USR_010",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.07122654602111252,
+      "raw_score": 0.3702033131080709
+    },
+    {
+      "event": "EVT-0461",
+      "user": "USR_011",
+      "actual": 0,
+      "predicted": 1,
+      "score": 0.9524877700778356,
+      "raw_score": 0.5825901449865333
+    },
+    {
+      "event": "EVT-0463",
+      "user": "USR_013",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1125202221035309,
+      "raw_score": 0.38015522384730455
+    },
+    {
+      "event": "EVT-0469",
+      "user": "USR_019",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.01393581452221364,
+      "raw_score": 0.3563960597910141
+    },
+    {
+      "event": "EVT-0473",
+      "user": "USR_023",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.01288606409288608,
+      "raw_score": 0.35614306651063166
+    },
+    {
+      "event": "EVT-0479",
+      "user": "USR_029",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.026711533561716818,
+      "raw_score": 0.35947504978592026
+    },
+    {
+      "event": "EVT-0484",
+      "user": "USR_034",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.02684670004957211,
+      "raw_score": 0.35950762535074493
+    },
+    {
+      "event": "EVT-0485",
+      "user": "USR_035",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.061213534546016114,
+      "raw_score": 0.36779014465505666
+    },
+    {
+      "event": "EVT-0486",
+      "user": "USR_036",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.23071688158174294,
+      "raw_score": 0.40864100463502145
+    },
+    {
+      "event": "EVT-0493",
+      "user": "USR_043",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.009222371398773887,
+      "raw_score": 0.35526010461121116
+    },
+    {
+      "event": "EVT-0500",
+      "user": "USR_050",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.08231120377964855,
+      "raw_score": 0.3728747518137877
+    },
+    {
+      "event": "EVT-0507",
+      "user": "USR_057",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.09301146622737287,
+      "raw_score": 0.37545354999473884
+    },
+    {
+      "event": "EVT-0512",
+      "user": "USR_062",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.13623856696618247,
+      "raw_score": 0.3858714223878353
+    },
+    {
+      "event": "EVT-0514",
+      "user": "USR_064",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.07097354277785453,
+      "raw_score": 0.37014233850051564
+    },
+    {
+      "event": "EVT-0515",
+      "user": "USR_065",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.11979069182831271,
+      "raw_score": 0.38190743078545447
+    },
+    {
+      "event": "EVT-0520",
+      "user": "USR_070",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.10768375771767823,
+      "raw_score": 0.3789896201416567
+    },
+    {
+      "event": "EVT-0526",
+      "user": "USR_001",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.2917153552248066,
+      "raw_score": 0.4233418359127611
+    },
+    {
+      "event": "EVT-0530",
+      "user": "USR_005",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.21430075511712457,
+      "raw_score": 0.4046846645665379
+    },
+    {
+      "event": "EVT-0531",
+      "user": "USR_006",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.03950667089645742,
+      "raw_score": 0.3625587196533698
+    },
+    {
+      "event": "EVT-0535",
+      "user": "USR_010",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1718731736417301,
+      "raw_score": 0.39445947892595834
+    },
+    {
+      "event": "EVT-0536",
+      "user": "USR_011",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.2114528423623158,
+      "raw_score": 0.4039983082956064
+    },
+    {
+      "event": "EVT-0538",
+      "user": "USR_013",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.05625011340583794,
+      "raw_score": 0.36659394395716555
+    },
+    {
+      "event": "EVT-0544",
+      "user": "USR_019",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.046385734706071186,
+      "raw_score": 0.364216596488218
+    },
+    {
+      "event": "EVT-0548",
+      "user": "USR_023",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.0788506630020453,
+      "raw_score": 0.3720407501894361
+    },
+    {
+      "event": "EVT-0554",
+      "user": "USR_029",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1887625582405541,
+      "raw_score": 0.3985298757497385
+    },
+    {
+      "event": "EVT-0559",
+      "user": "USR_034",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.07365850639671652,
+      "raw_score": 0.37078942349773586
+    },
+    {
+      "event": "EVT-0560",
+      "user": "USR_035",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.06549685505096633,
+      "raw_score": 0.3688224388796666
+    },
+    {
+      "event": "EVT-0561",
+      "user": "USR_036",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.18450346751752036,
+      "raw_score": 0.3975034209816687
+    },
+    {
+      "event": "EVT-0568",
+      "user": "USR_043",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.15652600476035328,
+      "raw_score": 0.3907607611246523
+    },
+    {
+      "event": "EVT-0575",
+      "user": "USR_050",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.043870319061085294,
+      "raw_score": 0.363610373106192
+    },
+    {
+      "event": "EVT-0582",
+      "user": "USR_057",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.28324557094533087,
+      "raw_score": 0.42130059025176275
+    },
+    {
+      "event": "EVT-0587",
+      "user": "USR_062",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.006429031121658804,
+      "raw_score": 0.3545869004855559
+    },
+    {
+      "event": "EVT-0589",
+      "user": "USR_064",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.05609557925792113,
+      "raw_score": 0.36655670072304025
+    },
+    {
+      "event": "EVT-0590",
+      "user": "USR_065",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.0474918511684726,
+      "raw_score": 0.3644831741665784
+    },
+    {
+      "event": "EVT-0595",
+      "user": "USR_070",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.24091076155166094,
+      "raw_score": 0.41109776298573364
+    },
+    {
+      "event": "EVT-0601",
+      "user": "USR_001",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.3459460504614165,
+      "raw_score": 0.43641161050110566
+    },
+    {
+      "event": "EVT-0605",
+      "user": "USR_005",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.361881386353596,
+      "raw_score": 0.4402520784720887
+    },
+    {
+      "event": "EVT-0606",
+      "user": "USR_006",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.3570141149877616,
+      "raw_score": 0.43907905018369575
+    },
+    {
+      "event": "EVT-0610",
+      "user": "USR_010",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.19722540491532645,
+      "raw_score": 0.4005694494253555
+    },
+    {
+      "event": "EVT-0611",
+      "user": "USR_011",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.717056086006923,
+      "raw_score": 0.5258503405577687
+    },
+    {
+      "event": "EVT-0613",
+      "user": "USR_013",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.026364511409651147,
+      "raw_score": 0.35939141631441723
+    },
+    {
+      "event": "EVT-0619",
+      "user": "USR_019",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.17792242835772215,
+      "raw_score": 0.39591736906032865
+    },
+    {
+      "event": "EVT-0623",
+      "user": "USR_023",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.0659584546582173,
+      "raw_score": 0.36893368589190784
+    },
+    {
+      "event": "EVT-0629",
+      "user": "USR_029",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.06489965524099592,
+      "raw_score": 0.36867851177590255
+    },
+    {
+      "event": "EVT-0634",
+      "user": "USR_034",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.2468592863576696,
+      "raw_score": 0.41253137688296476
+    },
+    {
+      "event": "EVT-0635",
+      "user": "USR_035",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1144004664155995,
+      "raw_score": 0.38060836886457816
+    },
+    {
+      "event": "EVT-0636",
+      "user": "USR_036",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.23339204705407776,
+      "raw_score": 0.40928572824694254
+    },
+    {
+      "event": "EVT-0643",
+      "user": "USR_043",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.08820612347824489,
+      "raw_score": 0.37429544670513837
+    },
+    {
+      "event": "EVT-0650",
+      "user": "USR_050",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.14329969313574217,
+      "raw_score": 0.3875731768457738
+    },
+    {
+      "event": "EVT-0657",
+      "user": "USR_057",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.15274388526386456,
+      "raw_score": 0.3898492579792543
+    },
+    {
+      "event": "EVT-0662",
+      "user": "USR_062",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.035988913349979036,
+      "raw_score": 0.3617109286009349
+    },
+    {
+      "event": "EVT-0664",
+      "user": "USR_064",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.07860500365953632,
+      "raw_score": 0.37198154548593554
+    },
+    {
+      "event": "EVT-0665",
+      "user": "USR_065",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.17096301518708654,
+      "raw_score": 0.3942401277671733
+    },
+    {
+      "event": "EVT-0670",
+      "user": "USR_070",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.2566365180899709,
+      "raw_score": 0.4148877216482615
+    },
+    {
+      "event": "EVT-0676",
+      "user": "USR_001",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.33622663185443924,
+      "raw_score": 0.4340691988877432
+    },
+    {
+      "event": "EVT-0680",
+      "user": "USR_005",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.18722629847490255,
+      "raw_score": 0.39815963213109035
+    },
+    {
+      "event": "EVT-0681",
+      "user": "USR_006",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.08236131143190636,
+      "raw_score": 0.3728868279215585
+    },
+    {
+      "event": "EVT-0685",
+      "user": "USR_010",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.08564270691487452,
+      "raw_score": 0.3736776549450825
+    },
+    {
+      "event": "EVT-0686",
+      "user": "USR_011",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.205015562020855,
+      "raw_score": 0.4024469027187869
+    },
+    {
+      "event": "EVT-0688",
+      "user": "USR_013",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.12220407093169731,
+      "raw_score": 0.3824890630278559
+    },
+    {
+      "event": "EVT-0694",
+      "user": "USR_019",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.15736401107898484,
+      "raw_score": 0.3909627233831175
+    },
+    {
+      "event": "EVT-0698",
+      "user": "USR_023",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.03937989300988819,
+      "raw_score": 0.36252816576883967
+    },
+    {
+      "event": "EVT-0704",
+      "user": "USR_029",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.03268345297565944,
+      "raw_score": 0.36091430186003526
+    },
+    {
+      "event": "EVT-0709",
+      "user": "USR_034",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.08295000809966487,
+      "raw_score": 0.3730287057402909
+    },
+    {
+      "event": "EVT-0710",
+      "user": "USR_035",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.04940090460888889,
+      "raw_score": 0.3649432622778313
+    },
+    {
+      "event": "EVT-0711",
+      "user": "USR_036",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.11343864530022069,
+      "raw_score": 0.380376566835903
+    },
+    {
+      "event": "EVT-0718",
+      "user": "USR_043",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.027618626071627243,
+      "raw_score": 0.3596936620420158
+    },
+    {
+      "event": "EVT-0725",
+      "user": "USR_050",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1394683391915457,
+      "raw_score": 0.3866498080377522
+    },
+    {
+      "event": "EVT-0732",
+      "user": "USR_057",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.19283257237178233,
+      "raw_score": 0.39951076244194195
+    },
+    {
+      "event": "EVT-0737",
+      "user": "USR_062",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.2285492991860568,
+      "raw_score": 0.4081186102015797
+    },
+    {
+      "event": "EVT-0739",
+      "user": "USR_064",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.06386781148681607,
+      "raw_score": 0.36842983406268714
+    },
+    {
+      "event": "EVT-0740",
+      "user": "USR_065",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.17307876951106677,
+      "raw_score": 0.394750031466141
+    },
+    {
+      "event": "EVT-0745",
+      "user": "USR_070",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.16408627260479472,
+      "raw_score": 0.3925828103556873
+    },
+    {
+      "event": "EVT-0751",
+      "user": "USR_001",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.29909484519977225,
+      "raw_score": 0.42512031708710235
+    },
+    {
+      "event": "EVT-0755",
+      "user": "USR_005",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.14919273119416693,
+      "raw_score": 0.3889934182557005
+    },
+    {
+      "event": "EVT-0756",
+      "user": "USR_006",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.010874857208985627,
+      "raw_score": 0.3556583590860187
+    },
+    {
+      "event": "EVT-0760",
+      "user": "USR_010",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.14414758449707207,
+      "raw_score": 0.38777752143179905
+    },
+    {
+      "event": "EVT-0761",
+      "user": "USR_011",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.23170948269756103,
+      "raw_score": 0.4088802247442839
+    },
+    {
+      "event": "EVT-0763",
+      "user": "USR_013",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.05097252393446767,
+      "raw_score": 0.36532202766585337
+    },
+    {
+      "event": "EVT-0769",
+      "user": "USR_019",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1378014266511137,
+      "raw_score": 0.3862480766738654
+    },
+    {
+      "event": "EVT-0773",
+      "user": "USR_023",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.08829655747523629,
+      "raw_score": 0.37431724159363544
+    },
+    {
+      "event": "EVT-0779",
+      "user": "USR_029",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1927294610566431,
+      "raw_score": 0.3994859122783861
+    },
+    {
+      "event": "EVT-0784",
+      "user": "USR_034",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.10021619309186254,
+      "raw_score": 0.37718991268894053
+    },
+    {
+      "event": "EVT-0785",
+      "user": "USR_035",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.13254773635761927,
+      "raw_score": 0.38498192016244026
+    },
+    {
+      "event": "EVT-0786",
+      "user": "USR_036",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.23541888237464006,
+      "raw_score": 0.40977420217581007
+    },
+    {
+      "event": "EVT-0793",
+      "user": "USR_043",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.02861076869847697,
+      "raw_score": 0.35993277165394016
+    },
+    {
+      "event": "EVT-0800",
+      "user": "USR_050",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.07733098875838074,
+      "raw_score": 0.3716745037357303
+    },
+    {
+      "event": "EVT-0807",
+      "user": "USR_057",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.0956698695547619,
+      "raw_score": 0.3760942338750079
+    },
+    {
+      "event": "EVT-0812",
+      "user": "USR_062",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.015758764719362973,
+      "raw_score": 0.3568353967395553
+    },
+    {
+      "event": "EVT-0814",
+      "user": "USR_064",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.12349104534545864,
+      "raw_score": 0.3827992280629055
+    },
+    {
+      "event": "EVT-0815",
+      "user": "USR_065",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.10898669890493828,
+      "raw_score": 0.3793036332212431
+    },
+    {
+      "event": "EVT-0820",
+      "user": "USR_070",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.23651922193798677,
+      "raw_score": 0.4100393876026395
+    },
+    {
+      "event": "EVT-0826",
+      "user": "USR_001",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.08463474590012855,
+      "raw_score": 0.37343473305003594
+    },
+    {
+      "event": "EVT-0830",
+      "user": "USR_005",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1771912144083085,
+      "raw_score": 0.3957411441114691
+    },
+    {
+      "event": "EVT-0831",
+      "user": "USR_006",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.6262668308081681,
+      "raw_score": 0.5039698336729819
+    },
+    {
+      "event": "EVT-0835",
+      "user": "USR_010",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.14088436113882094,
+      "raw_score": 0.3869910739496548
+    },
+    {
+      "event": "EVT-0836",
+      "user": "USR_011",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.011514091788613488,
+      "raw_score": 0.3558124167064929
+    },
+    {
+      "event": "EVT-0838",
+      "user": "USR_013",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.034986755302024275,
+      "raw_score": 0.36146940523982884
+    },
+    {
+      "event": "EVT-0844",
+      "user": "USR_019",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.01581350780759728,
+      "raw_score": 0.3568485900025288
+    },
+    {
+      "event": "EVT-0848",
+      "user": "USR_023",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.03945456460279261,
+      "raw_score": 0.36254616186649535
+    },
+    {
+      "event": "EVT-0854",
+      "user": "USR_029",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.07219054707522018,
+      "raw_score": 0.37043564050909616
+    },
+    {
+      "event": "EVT-0859",
+      "user": "USR_034",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.0315981739108625,
+      "raw_score": 0.36065274606252135
+    },
+    {
+      "event": "EVT-0860",
+      "user": "USR_035",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.06639855181445344,
+      "raw_score": 0.3690397507432597
+    },
+    {
+      "event": "EVT-0861",
+      "user": "USR_036",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1608223723767338,
+      "raw_score": 0.3917961997457093
+    },
+    {
+      "event": "EVT-0868",
+      "user": "USR_043",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.05149663493012139,
+      "raw_score": 0.36544834012676836
+    },
+    {
+      "event": "EVT-0875",
+      "user": "USR_050",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.06428167822440953,
+      "raw_score": 0.3685295772975168
+    },
+    {
+      "event": "EVT-0882",
+      "user": "USR_057",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.0922289825723832,
+      "raw_score": 0.3752649688794653
+    },
+    {
+      "event": "EVT-0887",
+      "user": "USR_062",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1252300510486299,
+      "raw_score": 0.38321833411436085
+    },
+    {
+      "event": "EVT-0889",
+      "user": "USR_064",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.022348759365946023,
+      "raw_score": 0.3584236069624457
+    },
+    {
+      "event": "EVT-0890",
+      "user": "USR_065",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.1286731295663304,
+      "raw_score": 0.3840481272770703
+    },
+    {
+      "event": "EVT-0895",
+      "user": "USR_070",
+      "actual": 0,
+      "predicted": 0,
+      "score": 0.15944978114959313,
+      "raw_score": 0.39146540077913883
+    },
+    {
+      "event": "EVT-0901",
+      "user": "USR_001",
+      "actual": 1,
+      "predicted": 1,
+      "score": 1.0,
+      "raw_score": 0.6164828348496887
+    },
+    {
+      "event": "EVT-0905",
+      "user": "USR_005",
+      "actual": 1,
+      "predicted": 1,
+      "score": 1.0,
+      "raw_score": 0.6011518389677983
+    },
+    {
+      "event": "EVT-0906",
+      "user": "USR_006",
+      "actual": 1,
+      "predicted": 1,
+      "score": 1.0,
+      "raw_score": 0.6290617054861259
+    },
+    {
+      "event": "EVT-0910",
+      "user": "USR_010",
+      "actual": 1,
+      "predicted": 0,
+      "score": 0.1997039646425561,
+      "raw_score": 0.401166790410886
+    },
+    {
+      "event": "EVT-0911",
+      "user": "USR_011",
+      "actual": 1,
+      "predicted": 1,
+      "score": 0.986914894267288,
+      "raw_score": 0.590887194303676
+    },
+    {
+      "event": "EVT-0913",
+      "user": "USR_013",
+      "actual": 1,
+      "predicted": 1,
+      "score": 0.8782681424433664,
+      "raw_score": 0.5647029724363548
+    },
+    {
+      "event": "EVT-0919",
+      "user": "USR_019",
+      "actual": 1,
+      "predicted": 1,
+      "score": 1.0,
+      "raw_score": 0.60660281677468
+    },
+    {
+      "event": "EVT-0923",
+      "user": "USR_023",
+      "actual": 1,
+      "predicted": 1,
+      "score": 1.0,
+      "raw_score": 0.6222222266949324
+    },
+    {
+      "event": "EVT-0929",
+      "user": "USR_029",
+      "actual": 1,
+      "predicted": 1,
+      "score": 1.0,
+      "raw_score": 0.6604448947024901
+    },
+    {
+      "event": "EVT-0934",
+      "user": "USR_034",
+      "actual": 1,
+      "predicted": 1,
+      "score": 0.901852691404235,
+      "raw_score": 0.5703869257277786
+    },
+    {
+      "event": "EVT-0935",
+      "user": "USR_035",
+      "actual": 1,
+      "predicted": 0,
+      "score": 0.27802956672077916,
+      "raw_score": 0.42004351620597913
+    },
+    {
+      "event": "EVT-0936",
+      "user": "USR_036",
+      "actual": 1,
+      "predicted": 1,
+      "score": 1.0,
+      "raw_score": 0.6119019070435141
+    },
+    {
+      "event": "EVT-0943",
+      "user": "USR_043",
+      "actual": 1,
+      "predicted": 0,
+      "score": 0.4846250878045975,
+      "raw_score": 0.46983371121908457
+    },
+    {
+      "event": "EVT-0950",
+      "user": "USR_050",
+      "actual": 1,
+      "predicted": 0,
+      "score": 0.6668890918454246,
+      "raw_score": 0.5137599311944944
+    },
+    {
+      "event": "EVT-0957",
+      "user": "USR_057",
+      "actual": 1,
+      "predicted": 1,
+      "score": 0.9851878594347103,
+      "raw_score": 0.5904709732711126
+    },
+    {
+      "event": "EVT-0962",
+      "user": "USR_062",
+      "actual": 1,
+      "predicted": 1,
+      "score": 0.8294348041655003,
+      "raw_score": 0.5529339784947609
+    },
+    {
+      "event": "EVT-0964",
+      "user": "USR_064",
+      "actual": 1,
+      "predicted": 0,
+      "score": 0.17305867207508985,
+      "raw_score": 0.3947451879184624
+    },
+    {
+      "event": "EVT-0965",
+      "user": "USR_065",
+      "actual": 1,
+      "predicted": 1,
+      "score": 1.0,
+      "raw_score": 0.6288236079273287
+    },
+    {
+      "event": "EVT-0970",
+      "user": "USR_070",
+      "actual": 1,
+      "predicted": 1,
+      "score": 1.0,
+      "raw_score": 0.6214385587727314
+    },
+    {
+      "event": "EVT-0976",
+      "user": "USR_001",
+      "actual": 1,
+      "predicted": 1,
+      "score": 1.0,
+      "raw_score": 0.6152319663222883
+    },
+    {
+      "event": "EVT-0980",
+      "user": "USR_005",
+      "actual": 1,
+      "predicted": 1,
+      "score": 0.9957535144066146,
+      "raw_score": 0.5930173306109645
+    },
+    {
+      "event": "EVT-0981",
+      "user": "USR_006",
+      "actual": 1,
+      "predicted": 1,
+      "score": 1.0,
+      "raw_score": 0.6038444680253775
+    },
+    {
+      "event": "EVT-0985",
+      "user": "USR_010",
+      "actual": 1,
+      "predicted": 0,
+      "score": 0.6131467407157289,
+      "raw_score": 0.5008078491301174
+    },
+    {
+      "event": "EVT-0986",
+      "user": "USR_011",
+      "actual": 1,
+      "predicted": 1,
+      "score": 0.9762618076087478,
+      "raw_score": 0.5883197656419238
+    },
+    {
+      "event": "EVT-0988",
+      "user": "USR_013",
+      "actual": 1,
+      "predicted": 1,
+      "score": 0.8766083396420398,
+      "raw_score": 0.5643029545428022
+    },
+    {
+      "event": "EVT-0994",
+      "user": "USR_019",
+      "actual": 1,
+      "predicted": 1,
+      "score": 1.0,
+      "raw_score": 0.6041931234872401
+    },
+    {
+      "event": "EVT-0998",
+      "user": "USR_023",
+      "actual": 1,
+      "predicted": 1,
+      "score": 1.0,
+      "raw_score": 0.5948757659366642
+    }
+  ],
+  "sensitivity": [
+    {
+      "seed": 42,
+      "precision": 0.9130434782608695,
+      "recall": 0.7777777777777778,
+      "f1": 0.84,
+      "accuracy": 0.9686274509803922,
+      "roc_auc": 0.9762833008447043
+    },
+    {
+      "seed": 43,
+      "precision": 0.7142857142857143,
+      "recall": 0.7692307692307693,
+      "f1": 0.7407407407407407,
+      "accuracy": 0.9448818897637795,
+      "roc_auc": 0.9686234817813765
+    },
+    {
+      "seed": 44,
+      "precision": 0.6666666666666666,
+      "recall": 0.75,
+      "f1": 0.7058823529411765,
+      "accuracy": 0.9404761904761905,
+      "roc_auc": 0.947733918128655
+    },
+    {
+      "seed": 45,
+      "precision": 0.8214285714285714,
+      "recall": 0.92,
+      "f1": 0.8679245283018868,
+      "accuracy": 0.9723320158102767,
+      "roc_auc": 0.9649122807017544
+    },
+    {
+      "seed": 46,
+      "precision": 0.9047619047619048,
+      "recall": 0.7307692307692307,
+      "f1": 0.8085106382978723,
+      "accuracy": 0.9645669291338582,
+      "roc_auc": 0.9215587044534413
+    }
+  ]
+}

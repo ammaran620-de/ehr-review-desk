@@ -71,7 +71,7 @@ class FeedbackTests(unittest.TestCase):
         self.assertEqual(records[0]['clarity'], '5')
 
     def test_legacy_feedback_remains_readable_and_identified(self):
-        old_fields = [f for f in FIELDS if f not in {'survey_protocol', 'shap_clarity'}]
+        old_fields = [f for f in FIELDS if f not in {'survey_protocol', 'shap_clarity', 'benchmark_id', 'dataset_sha256'}]
         old = {**response(), 'interpretation_correct': '1', 'utc': '2026-11-10T00:00:00+00:00'}
         with self.path.open('w', newline='') as handle:
             writer = csv.DictWriter(handle, fieldnames=old_fields)
@@ -97,6 +97,7 @@ class DashboardTests(unittest.TestCase):
         for source in [*ROOT.glob('*.py'), ROOT / 'interface.css']:
             shutil.copy2(source, self.root / source.name)
         self.app = AppTest.from_file(str(self.root / 'app.py'), default_timeout=60).run()
+        widget(self.app.selectbox, 'Benchmark dataset').set_value('Original demonstration (v1)').run()
         self.assertFalse(self.app.exception)
 
     def submit(self, code='IT01', rating=4):

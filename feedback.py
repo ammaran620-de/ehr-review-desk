@@ -9,7 +9,8 @@ from tempfile import NamedTemporaryFile
 from filelock import FileLock
 
 FIELDS = ('utc', 'reviewer', 'event', 'round', 'version', 'severity', 'template',
-          'clarity', 'completeness', 'severity_fit', 'trust', 'interpretation_correct', 'shap_clarity', 'comment', 'survey_protocol')
+          'clarity', 'completeness', 'severity_fit', 'trust', 'interpretation_correct', 'shap_clarity', 'comment',
+          'survey_protocol', 'benchmark_id', 'dataset_sha256')
 KEY = ('reviewer', 'event', 'round')
 
 def read_feedback(path):
@@ -17,9 +18,9 @@ def read_feedback(path):
         with path.open(newline='', encoding='utf-8-sig') as handle:
             reader = csv.DictReader(handle, strict=True)
             headers = reader.fieldnames or []
-            allowed = [set(FIELDS) - omitted for omitted in
-                       (set(), {'shap_clarity'}, {'survey_protocol'}, {'shap_clarity', 'survey_protocol'})]
-            if set(headers) not in allowed or len(headers) != len(set(headers)):
+            optional = {'shap_clarity', 'survey_protocol', 'benchmark_id', 'dataset_sha256'}
+            if (not set(FIELDS) - optional <= set(headers) or not set(headers) <= set(FIELDS)
+                    or len(headers) != len(set(headers))):
                 raise ValueError('The CSV column headers do not match the feedback format.')
             rows = list(reader)
     except FileNotFoundError:
@@ -31,6 +32,8 @@ def read_feedback(path):
     for line, row in enumerate(rows, start=2):
         row.setdefault('shap_clarity', '')
         row.setdefault('survey_protocol', 'quiz-v1' if row.get('interpretation_correct') else 'direct-review-v2')
+        row.setdefault('benchmark_id', 'reference-v1')
+        row.setdefault('dataset_sha256', '')
         if None in row or any(value is None for value in row.values()):
             raise ValueError(f'CSV row {line} has missing or extra fields.')
         if (row['round'] not in {'1', '2'}
@@ -39,6 +42,8 @@ def read_feedback(path):
                 or row['severity'] not in {'High', 'Medium', 'Low'}
                 or row['interpretation_correct'] not in {'', '0', '1'}
                 or row['survey_protocol'] not in {'quiz-v1', 'direct-review-v2'}
+                or row['benchmark_id'] not in {'reference-v1', 'realistic-v1'}
+                or (row['dataset_sha256'] and not re.fullmatch('[a-f0-9]{64}', row['dataset_sha256']))
                 or any(row[key] not in {'1', '2', '3', '4', '5'} for key in
                        ('clarity', 'completeness', 'severity_fit', 'trust'))
                 or row['shap_clarity'] not in {'', '1', '2', '3', '4', '5'}):
@@ -51,7 +56,8 @@ def read_feedback(path):
 
 def save_feedback(path, response):
     path = Path(path)
-    response = {'survey_protocol': 'direct-review-v2', **response, 'utc': datetime.now(timezone.utc).isoformat()}
+    response = {'survey_protocol': 'direct-review-v2', 'benchmark_id': 'reference-v1', 'dataset_sha256': '',
+                **response, 'utc': datetime.now(timezone.utc).isoformat()}
     path.parent.mkdir(parents=True, exist_ok=True)
     with FileLock(str(path) + '.lock', timeout=10):
         rows = read_feedback(path)

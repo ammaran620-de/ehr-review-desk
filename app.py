@@ -32,8 +32,13 @@ st.html('<div class="hero"><div class="brandline">Clinical access analytics · r
         '<h1>EHR Review Desk</h1><p>Triage access alerts, inspect the supporting evidence, and record reviewer decisions.</p></div>')
 
 @st.cache_data(show_spinner='Python is generating events, model scores and SHAP explanations…')
-def baseline_run(pipeline_digest):
-    return run_pipeline()
+def baseline_run(pipeline_digest, benchmark):
+    return run_pipeline(benchmark)
+
+@st.cache_data(show_spinner='Running all five configured sensitivity seeds…')
+def robustness_run(pipeline_digest):
+    from realistic_pipeline import sensitivity_runs
+    return sensitivity_runs()
 
 def copy_for(row, round_number, revisions):
     alert = row['alert']
@@ -45,17 +50,25 @@ def copy_for(row, round_number, revisions):
         return message, severity, version
     return alert['message'], severity, 'baseline-v1'
 
+benchmarks = {'Realistic access patterns (v1)': 'realistic-v1', 'Original demonstration (v1)': 'reference-v1'}
+benchmark = benchmarks[st.selectbox('Benchmark dataset', list(benchmarks),
+    help='Each benchmark has separate case evidence and feedback. Original demonstration preserves earlier reviews.')]
 action, info = st.columns([1, 3.6])
 if action.button('Run Python pipeline', type='primary', help='Regenerate the seeded synthetic data, score events and refresh this dashboard.'):
     baseline_run.clear()
 pipeline_digest = hashlib.sha256(b''.join((ROOT / name).read_bytes()
-    for name in ('pipeline.py', 'translation.py'))).hexdigest()
-result = baseline_run(pipeline_digest)
+    for name in ('pipeline.py', 'reference_pipeline.py', 'realistic_pipeline.py', 'translation.py'))).hexdigest()
+result = baseline_run(pipeline_digest, benchmark)
+metadata = result['metadata']
 workspace = st.radio('Data workspace', ['Rehearsal', 'Reviewer study'], horizontal=True,
                      help='Rehearsal responses and revisions are stored separately from research data.')
 participant_view = workspace == 'Reviewer study' and st.radio(
     'Study view', ['Participant', 'Researcher'], horizontal=True) == 'Participant'
-workspace_dir = ROOT / 'data' / ('rehearsal' if workspace == 'Rehearsal' else 'study')
+storage_root = ROOT / 'data'
+if benchmark != 'reference-v1':
+    storage_root /= f"{benchmark}-{metadata['dataset_sha256'][:12]}"
+workspace_key = f"{benchmark}_{metadata['dataset_sha256'][:12]}_{workspace}"
+workspace_dir = storage_root / ('rehearsal' if workspace == 'Rehearsal' else 'study')
 FEEDBACK, REVISIONS, STUDY_LOCK = (workspace_dir / name for name in
                                    ('feedback.csv', 'revisions.json', '.study.lock'))
 storage_errors = []
@@ -66,6 +79,10 @@ except (ValueError, OSError) as exc:
     storage_errors.append(f'{REVISIONS.name}: {exc}')
 try:
     feedback = read_feedback(FEEDBACK)
+    if any(item['benchmark_id'] != benchmark or
+           (item['dataset_sha256'] != metadata['dataset_sha256'] and
+            (benchmark != 'reference-v1' or item['dataset_sha256'])) for item in feedback):
+        raise ValueError('Feedback belongs to another benchmark or dataset. Keep its original file as an archive.')
 except (ValueError, OSError) as exc:
     feedback = []
     storage_errors.append(f'{FEEDBACK.name}: {exc}')
@@ -77,6 +94,8 @@ if storage_errors:
 rows = result['rows']
 flagged = [row for row in rows if row['flagged']]
 info.caption(f"Synthetic benchmark · {len(rows):,} events · Live Python run · Flags require a score above 0.75")
+if benchmark == 'realistic-v1':
+    st.caption('Realistic simulation · legitimate exceptions and subtle anomalies · test users excluded from training · feedback stored separately from the original demonstration')
 counts = Counter(row['alert']['severity'] for row in flagged)
 summary = [('Flagged events', len(flagged)), ('High severity', counts['High']),
            ('Synthetic events', len(rows)), ('Reviewer submissions', len(feedback))]
@@ -129,7 +148,7 @@ with alerts_tab:
             default_index = next((i for i, r in enumerate(visible) if r['id'] == default_id), 0)
             selection = st.dataframe(register.style.map(severity_style, subset=['Severity']),
                 hide_index=True, width='stretch', height=min(425, 40 + 36 * len(visible)),
-                row_height=36, key=f'register_{workspace}_{round_number}_{signature}',
+                row_height=36, key=f'register_{workspace_key}_{round_number}_{signature}',
                 on_select='rerun', selection_mode='single-row',
                 selection_default={'selection': {'rows': [default_index], 'columns': [], 'cells': []}},
                 column_config={'Event': st.column_config.TextColumn(width='small'),
@@ -146,8 +165,8 @@ with alerts_tab:
             message, severity, version = copy_for(row, round_number, revisions)
             policy = next(b for b in result['baselines'] if b[0] == row['role'])
             event_id = row['id']
-            case_slot = (workspace, event_id, round_number)
-            form_identity = f'{workspace}_{event_id}_{round_number}_{version}'
+            case_slot = (workspace_key, event_id, round_number)
+            form_identity = f'{workspace_key}_{event_id}_{round_number}_{version}'
             # Store the displayed version separately from the value loaded on this rerun.
             previous = st.session_state.setdefault('displayed_versions', {}).get(case_slot)
             if previous is not None and previous != version:
@@ -174,7 +193,8 @@ with alerts_tab:
                 for label, value in facts) + '</div>')
             evidence = {key: row[key] for key in ('id', 'user_id', 'role', 'date', 'login_time',
                         'records_accessed', 'session_duration_mins', 'department_accessed', 'assigned_department', 'score')}
-            evidence.update({'severity': severity, 'alert_version': version, 'alert_message': message,
+            evidence.update({'benchmark_id': benchmark, 'dataset_sha256': metadata['dataset_sha256'],
+                             'severity': severity, 'alert_version': version, 'alert_message': message,
                              'raw_shap': dict(zip(result['features'], (-value for value in row['shap']))),
                              'role_baseline': {'shift': policy[1:3], 'daily_range': policy[3:5],
                                                'mean_daily_records': row['baseline'], 'allowed_departments': policy[5]}})
@@ -205,7 +225,7 @@ with alerts_tab:
                     st.caption(f'Feedback is automatically linked to {event_id} · {round_name}. Use the same reviewer code in both rounds.')
                     with st.form(f'feedback_{form_identity}'):
                         reviewer = st.text_input('Reviewer code', max_chars=32, placeholder='e.g. IT01',
-                                                 value=st.session_state.get(f'last_reviewer_{workspace}', ''))
+                                                 value=st.session_state.get(f'last_reviewer_{workspace_key}', ''))
                         st.caption('Scale: 1 strongly disagree · 5 strongly agree')
                         left, right = st.columns(2)
                         ratings = {key: (left if i % 2 == 0 else right).selectbox(label, [1, 2, 3, 4, 5], index=None)
@@ -225,11 +245,12 @@ with alerts_tab:
                                             raise ValueError('The alert changed while you were reviewing it. Reopen the case and rate the current version.')
                                         save_feedback(FEEDBACK, dict(reviewer=reviewer.strip().casefold(), event=event_id,
                                             round=round_number, version=version, severity=severity, template=row['alert']['template'],
+                                            benchmark_id=benchmark, dataset_sha256=metadata['dataset_sha256'],
                                             **ratings, interpretation_correct='', comment=safe_comment))
                                 except (OSError, TimeoutError, ValueError) as exc:
                                     st.error(f'Could not save feedback: {exc}')
                                 else:
-                                    st.session_state[f'last_reviewer_{workspace}'] = reviewer.strip()
+                                    st.session_state[f'last_reviewer_{workspace_key}'] = reviewer.strip()
                                     st.session_state['saved_feedback'] = f'Saved {round_name} feedback for {event_id} in {workspace}.'
                                     st.rerun()
 
@@ -238,15 +259,15 @@ if participant_view:
 
 with evaluation_tab:
     st.subheader('Held-out benchmark')
-    st.caption('250 synthetic events · 25 injected anomalies · 0.75 operating threshold')
+    st.caption(f"{metadata['test_count']} held-out synthetic events · {metadata['test_anomalies']} injected anomalies · threshold >0.75")
     for column, label, value in zip(st.columns(5), SCORE_LABELS, result['metrics']):
         column.metric(label, f'{value:.3f}' if label == 'ROC-AUC' else f'{value:.1%}')
     tn, fp = result['cm'][0]
     fn, tp = result['cm'][1]
     st.info(f'Precision and accuracy measure different things. This run has {tp} detected anomalies, '
             f'{fp} false alarms, {fn} missed anomalies and {tn} correctly cleared normal events. '
-            'An always-normal prediction would already achieve 90% accuracy here while missing every anomaly.')
-    st.caption('Synthetic scenarios are easily separated. These results describe this test set; they are not hospital validation. '
+            f"An always-normal prediction would achieve {metadata['majority_accuracy']:.1%} accuracy here while missing every anomaly.")
+    st.caption('These results describe the selected synthetic test set; they are not hospital validation. '
                'Labels are used for evaluation only. The anomaly score is a relative index, not a probability.')
     with st.expander('Metric definitions and reproducibility'):
         st.markdown('- **Precision** — of the events flagged, how many were injected anomalies?\n'
@@ -255,11 +276,18 @@ with evaluation_tab:
                     '- **Accuracy** — correct decisions across normal and anomalous events.\n'
                     '- **ROC-AUC** — ranking performance across thresholds using raw continuous scores.')
         st.json(result['metadata'])
-        st.caption('The split is deterministic and interleaved. Users may appear in training and test data. '
-                   'This benchmark does not test generalization to new users or future hospital activity.')
+        st.caption(metadata['split'] + '. Synthetic testing does not establish performance in a real hospital.')
     st.download_button('Download benchmark evidence',
         json.dumps({k: result[k] for k in ('metadata', 'metrics', 'cm', 'test_predictions')}, indent=2),
-        'benchmark_evidence.json', 'application/json')
+        f'{benchmark}_evidence.json', 'application/json')
+    if benchmark == 'realistic-v1':
+        with st.expander('Sensitivity across all five configured seeds', expanded=True):
+            sensitivity = pd.DataFrame(robustness_run(pipeline_digest))
+            st.caption('Seed 42 is the primary result above. Every configured seed is shown; none is chosen to obtain a desired percentage. Seeds vary synthetic generation, user split and forest randomness.')
+            st.dataframe(sensitivity.style.format({name: '{:.1%}' for name in
+                ('precision', 'recall', 'f1', 'accuracy', 'roc_auc')}), hide_index=True, width='stretch')
+            st.download_button('Download all sensitivity runs', sensitivity.to_csv(index=False),
+                               'realistic-v1_sensitivity.csv', 'text/csv')
     charts = st.columns(2)
     with charts[0]:
         st.markdown('**ROC curve · continuous raw scores**')
@@ -296,6 +324,9 @@ with research_tab:
     st.warning('These published results use different data and methods. The table provides context; '
                'it cannot establish that this prototype is better or worse. A fair performance comparison needs the same dataset, labels and test protocol.')
     st.dataframe(pd.DataFrame(comparison_rows(result)), hide_index=True, width='stretch')
+    st.caption('Near-range references: Chua reports 93% accuracy on web logs. Abengowe Table 2 lists 92% for Linear SVC, '
+               'but its prose says 93% and stronger models reach 98%. Neither is the same EHR access-log benchmark. '
+               'These distinctions remain in the comparison.')
     for ref in REFERENCES:
         with st.expander(ref['citation'] + ' · ' + ref['title']):
             st.write(ref['relevance'])
@@ -306,7 +337,7 @@ with research_tab:
     st.write('The five ratings measure perceived clarity, completeness, severity fit, trust and clarity relative to raw SHAP. '
              'Matched Round 1 and Round 2 responses can describe changes after a wording revision. '
              'Actual improvement remains unproven until reviewers submit responses. No recall questions are required.')
-    st.caption('Candidate references checked 11 November 2026. Add the supervisor-approved papers when supplied. '
+    st.caption('References checked 18 November 2026. Published metrics retain their original task and dataset. '
                'Metrics remain calculated from the model; no target percentage is imposed.')
     st.download_button('Download evaluation and research note', evaluation_report(result),
                        'evaluation_and_research_context.md', 'text/markdown')
@@ -357,7 +388,7 @@ with study_tab:
         st.dataframe(frame[['reviewer', 'event', 'round', 'version', 'clarity', 'shap_clarity', 'comment']],
                      hide_index=True, width='stretch')
         st.caption('The CSV export includes every protocol. Use the survey_protocol column when analyzing it.')
-        st.download_button('Download feedback CSV', FEEDBACK.read_bytes(), 'feedback.csv', 'text/csv')
+        st.download_button('Download feedback CSV', FEEDBACK.read_bytes(), f'{benchmark}_{workspace.lower().replace(" ", "_")}_feedback.csv', 'text/csv')
 
 with revisions_tab:
     st.subheader('Round 2 revision studio')
@@ -375,7 +406,7 @@ with revisions_tab:
         else:
             st.caption('No Round 1 response for this case.')
     revision_identity = hashlib.sha256(json.dumps(existing, sort_keys=True).encode()).hexdigest()[:12]
-    with st.form(f'revision_{workspace}_{event}_{revision_identity}'):
+    with st.form(f'revision_{workspace_key}_{event}_{revision_identity}'):
         unchanged = st.checkbox('Designate this case as an unchanged Round 2 control', value=existing.get('control', False))
         new_message = st.text_area('Revised alert', value=existing.get('message', original['message']), max_chars=2400)
         new_severity = st.selectbox('Revised severity', list(SEVERITY),
