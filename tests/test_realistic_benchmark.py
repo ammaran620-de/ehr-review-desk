@@ -76,7 +76,7 @@ class DatasetIsolationTests(unittest.TestCase):
                 shutil.copy2(source, root / source.name)
             app = AppTest.from_file(str(root / 'app.py'), default_timeout=60).run()
             self.assertFalse(app.exception)
-            self.assertEqual(widget(app.selectbox, 'Benchmark dataset').value, 'Realistic access patterns (v1)')
+            self.assertNotIn('Benchmark dataset', [x.label for x in app.selectbox])
             widget(app.text_input, 'Reviewer code').set_value('IT88')
             for label in ['Was this alert clear?', 'Was the evidence complete?', 'Was the severity appropriate?',
                           'Would you trust this alert to guide a review?',
@@ -84,15 +84,16 @@ class DatasetIsolationTests(unittest.TestCase):
                 widget(app.selectbox, label).set_value(4)
             widget(app.button, 'Save reviewer feedback').click().run()
             self.assertFalse(app.exception)
-            paths = list((root / 'data').glob('realistic-v1-*/rehearsal/feedback.csv'))
+            paths = list((root / 'data').glob('realistic-v1-*/study/feedback.csv'))
             self.assertEqual(len(paths), 1)
             saved = read_feedback(paths[0])
             self.assertEqual(saved[0]['benchmark_id'], 'realistic-v1')
             self.assertEqual(len(saved[0]['dataset_sha256']), 64)
             before = paths[0].read_bytes()
+            widget(app.toggle, 'Researcher tools').set_value(True).run()
             widget(app.selectbox, 'Benchmark dataset').set_value('Original demonstration (v1)').run()
             self.assertFalse(app.exception)
-            self.assertFalse((root / 'data/rehearsal/feedback.csv').exists())
+            self.assertFalse((root / 'data/study/feedback.csv').exists())
             self.assertEqual(paths[0].read_bytes(), before)
             self.assertTrue(any('No study responses' in x.value for x in app.info))
 

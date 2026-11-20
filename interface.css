@@ -29,3 +29,5 @@ header[data-testid="stHeader"]{background:transparent}
 .overview-strip strong{display:block;font-size:1.38rem;font-variant-numeric:tabular-nums}
 @media(max-width:700px){.block-container{padding:1.25rem .8rem 2.5rem}.hero{padding:1.2rem}.overview-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.st-key-alert_detail{padding:.75rem}.case-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .alert-copy{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.55;color:#243830}
+.overview-strip.review-summary{grid-template-columns:repeat(3,minmax(0,1fr))}
+.review-summary div:first-child{border-color:#69b69e;background:#edf7f1}

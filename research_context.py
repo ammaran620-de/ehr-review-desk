@@ -60,7 +60,7 @@ REFERENCES = [
 ]
 
 
-def comparison_rows(result):
+def comparison_rows(result, *, same_method=False):
     """Published values retain their own dataset and method, without a leaderboard."""
     p, r, f, a, auc = result['metrics']
     rows = [{'Study': 'This prototype · computed now', 'Method': 'Isolation Forest (unsupervised)',
@@ -69,6 +69,8 @@ def comparison_rows(result):
              'F1': f'{f:.1%}', 'ROC-AUC': f'{auc:.3f}'}]
     for ref in REFERENCES:
         if 'accuracy' not in ref:
+            continue
+        if same_method and ref['method'] != 'Isolation Forest (unsupervised)':
             continue
         rows.append({'Study': ref['citation'], 'Method': ref['method'],
                      'Data / evaluation': ref['data'], 'Accuracy': ref['accuracy'],
@@ -119,6 +121,8 @@ def evaluation_report(result):
         *[f"- **{ref['citation']}** — {ref['title']}. {ref.get('location', '')} "
           f"{ref['relevance']} {ref['url']}" for ref in REFERENCES], '',
         '## Human evaluation and data separation', '',
+        'The reviewer list displays up to 20 alerts per page without changing model flags or metrics. '
+        'Dataset settings and archived practice data are in Researcher tools. '
         'Select an alert, inspect its wording, raw SHAP and role baseline, and submit five 1–5 ratings plus '
         'an optional comment. No recall quiz is required. The event, wording version, benchmark and dataset '
         'fingerprint are attached to feedback. Original feedback is preserved. Each realistic dataset has its '

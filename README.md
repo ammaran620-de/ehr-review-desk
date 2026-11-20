@@ -35,20 +35,22 @@ $python312 = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
 
 If the existing `.venv312` is damaged, rename it before rebuilding. For an installation on macOS or Linux, create a Python 3.12 virtual environment and use its `bin/python` with the same pip and Streamlit module commands. The software is designed for trusted local use and binds to loopback.
 
-## Rehearse the workflow
+## Review alerts
 
-1. Leave **Data workspace** set to **Rehearsal**. Select a row in the severity-sorted **All alerts** table. Search by role, department, user, wording or event, and filter by severity or response status. The selected alert opens below the table with its plain-English wording, facts, raw SHAP values and role baseline. Case evidence can be exported as JSON.
-2. Submit the five ratings and an optional comment using a practice reviewer code. Feedback is available immediately. No comprehension questions or case-code entry are required. The event and wording version are attached automatically, and a successfully used reviewer code is remembered for the browser session.
-3. Open **Revision studio** and save a shorter, evidence-checked alert for Round 2 with a rationale. Select **Round 2**, open the same case, and submit feedback using the same code.
-4. Open **Study results** to inspect matched responses and download the rehearsal CSV. Open **Model evaluation** for computed metrics, metric definitions, ROC curve, confusion matrix and downloadable per-event predictions. **Research context** provides linked candidate studies and a downloadable evaluation note, with explicit limits on comparisons.
+1. Open the dashboard. The default reviewer screen has **Alert review**, **Model evaluation** and **Research context**. It has no Rehearsal radio, Participant/Researcher selector or benchmark selector.
+2. **Alerts for review** shows at most **20 cases per page**, sorted by severity and score. Use **Alert page**, search and filters to reach the remaining cases. Cards explicitly describe the current page; the total model flags and benchmark metrics are unchanged. These synthetic flags are investigation candidates, not confirmed hospital incidents.
+3. Select a row to open its plain-English explanation, raw SHAP values, role baseline and direct feedback form. Supply your anonymous reviewer code, five ratings and an optional comment. The selected event, round, dataset and wording version attach automatically.
+4. Use the same reviewer code, dataset and cases in Round 2. The case must first have an approved revision or an explicit unchanged-control designation.
 
-## Collect actual feedback
+## Researcher tools
 
-1. Obtain the study owner's approval of recruitment, consent, participant codes and cases. Use **Reviewer study → Researcher** to manage case revisions and see results. The software doesn't recruit reviewers or provide account-based access control.
-2. Switch to **Participant** before a reviewer starts. Select the assigned alert from the table in **Round 1**. The reviewer can immediately read the wording, inspect the evidence and submit ratings for clarity, completeness, severity fit, trust and perceived clarity compared with raw SHAP, plus an optional comment. Use a study-assigned anonymous reviewer code.
-3. After Round 1, use **Researcher → Revision studio** to approve revised wording or severity with a documented rationale. Explicitly designate unchanged controls if the study uses them. Round 2 feedback is unavailable for any case with neither designation.
-4. Run **Round 2** in Participant view using the same reviewer codes and assigned case IDs. If the wording changes while a form is open, the form resets and asks the reviewer to read the current wording. The evaluated case version is locked once Round 2 responses exist.
-5. Use **Researcher → Study results** to review paired responses, distinguish revised cases from controls, and export the research CSV. Current ratings are self-reported perceptions, not objective comprehension scores. Results are descriptive and can be affected by repeated exposure and visible evidence. The `survey_protocol` field separates new `direct-review-v2` responses from legacy `quiz-v1` responses; the dashboard matches only within the selected protocol. Legacy quiz fields remain in the CSV and are blank for new responses. Do not enter patient data or identifiable reviewer information.
+Open the sidebar and turn on **Researcher tools** to see **Role baselines**, **Study results** and **Revision studio**. Reviewers submit responses; the researcher analyzes paired responses, exports CSV and approves Round 2 wording. This is a navigation setting, not authentication.
+
+- **Dataset settings and archives** contains the benchmark selector. It chooses synthetic logs used to train and evaluate the model, not patient data. Keep the same dataset throughout both study rounds.
+- Earlier practice files can be accessed with **Open archived practice responses**. They stay separate from study feedback; practice is no longer part of the reviewer-facing flow.
+- **Revision studio** preserves Round 1 wording, records a rationale and requires an evidence check. Cases are locked against revision after Round 2 responses exist.
+- **Study results** compares the same reviewer/case within one dataset and survey protocol. Ratings measure perceived clarity, completeness, severity fit, trust and clarity relative to SHAP; they do not prove objective comprehension or causal improvement. Historical quiz responses stay separate.
+- **Research context** puts the same-detector Isolation Forest context in the main table. Other methods, including higher-performing published results, remain available under **Other approaches and complete literature context** and in the downloaded research note. Grouping is by method rather than reported accuracy; different datasets still prevent a direct superiority claim.
 
 ## Storage and recovery
 
@@ -65,7 +67,7 @@ Measured primary results: **96.86% accuracy, 91.30% precision, 77.78% recall, 84
 
 All configured seeds 42–46 are retained in the dashboard and [evaluation evidence](evaluations/realistic-v1.json). Their accuracy ranges from 94.05% to 97.23%. These are complete synthetic sensitivity results, not justification to select a more convenient seed. See [REALISTIC_PROTOCOL.md](REALISTIC_PROTOCOL.md) for assumptions. Rebuild the evidence with `python evaluate_benchmarks.py`.
 
-**Original demonstration (v1)** remains selectable and preserves the original data, events, scores and feedback. Its 250-event test set has 25 anomalies and 98.8% accuracy; users overlap between training and test. The two datasets differ, so a lower or higher metric across them is not evidence of model improvement.
+**Original demonstration (v1)** remains selectable through Researcher tools and preserves the original data, events, scores and feedback. Its 250-event test set has 25 anomalies and 98.8% accuracy; users overlap between training and test. The two datasets differ, so a lower or higher metric across them is not evidence of model improvement.
 
 Both use Isolation Forest without training labels, Tree SHAP, the fixed threshold >0.75 and raw-score ROC-AUC. The displayed score is a relative anomaly index, not a calibrated probability. `python pipeline.py` exports the realistic benchmark; use `python pipeline.py --benchmark reference-v1` for the original. Calling `run_pipeline()` without arguments retains the original benchmark for existing integrations.
 

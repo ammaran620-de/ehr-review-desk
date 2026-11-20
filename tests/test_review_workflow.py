@@ -97,7 +97,9 @@ class DashboardTests(unittest.TestCase):
         for source in [*ROOT.glob('*.py'), ROOT / 'interface.css']:
             shutil.copy2(source, self.root / source.name)
         self.app = AppTest.from_file(str(self.root / 'app.py'), default_timeout=60).run()
+        widget(self.app.toggle, 'Researcher tools').set_value(True).run()
         widget(self.app.selectbox, 'Benchmark dataset').set_value('Original demonstration (v1)').run()
+        widget(self.app.checkbox, 'Open archived practice responses').check().run()
         self.assertFalse(self.app.exception)
 
     def submit(self, code='IT01', rating=4):
@@ -112,8 +114,8 @@ class DashboardTests(unittest.TestCase):
 
     def test_participant_can_submit_immediately_and_search_by_role(self):
         app = self.app
-        widget(app.radio, 'Data workspace').set_value('Reviewer study').run()
-        self.assertEqual(widget(app.radio, 'Study view').value, 'Participant')
+        widget(app.toggle, 'Researcher tools').set_value(False).run()
+        self.assertNotIn('Study view', [x.label for x in app.radio])
         self.assertNotIn('How many records were accessed?', [x.label for x in app.text_input])
         self.assertTrue(any(x.label == 'Save reviewer feedback' for x in app.button))
         self.submit()

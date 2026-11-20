@@ -15,6 +15,7 @@ from feedback import read_feedback, save_feedback
 from revision_store import load_revisions, save_revision
 from pipeline import run_pipeline
 from research_context import REFERENCES, comparison_rows, evaluation_report
+from review_presentation import PAGE_SIZE, alert_page, page_count
 
 ROOT = Path(__file__).resolve().parent
 SEVERITY = {'High': 0, 'Medium': 1, 'Low': 2}
@@ -26,7 +27,7 @@ RATINGS = {'clarity': 'Was this alert clear?', 'completeness': 'Was the evidence
 COLORS = {'High': '#A7284B', 'Medium': '#915016', 'Low': '#244AA3'}
 SCORE_LABELS = ['Precision', 'Recall', 'F1 score', 'Accuracy', 'ROC-AUC']
 
-st.set_page_config(page_title='EHR Review Desk', page_icon='◈', layout='wide')
+st.set_page_config(page_title='EHR Review Desk', page_icon='◈', layout='wide', initial_sidebar_state='collapsed')
 st.html(f"<style>{(ROOT / 'interface.css').read_text(encoding='utf-8')}</style>")
 st.html('<div class="hero"><div class="brandline">Clinical access analytics · research workspace</div>'
         '<h1>EHR Review Desk</h1><p>Triage access alerts, inspect the supporting evidence, and record reviewer decisions.</p></div>')
@@ -51,19 +52,29 @@ def copy_for(row, round_number, revisions):
     return alert['message'], severity, 'baseline-v1'
 
 benchmarks = {'Realistic access patterns (v1)': 'realistic-v1', 'Original demonstration (v1)': 'reference-v1'}
-benchmark = benchmarks[st.selectbox('Benchmark dataset', list(benchmarks),
-    help='Each benchmark has separate case evidence and feedback. Original demonstration preserves earlier reviews.')]
-action, info = st.columns([1, 3.6])
-if action.button('Run Python pipeline', type='primary', help='Regenerate the seeded synthetic data, score events and refresh this dashboard.'):
-    baseline_run.clear()
+benchmark = st.session_state.get('active_benchmark', 'realistic-v1')
+with st.sidebar:
+    st.subheader('Study tools')
+    researcher_mode = st.toggle('Researcher tools', value=False,
+        help='Open dataset settings, study results and the Round 2 revision studio.')
+    st.caption('Reviewers read alerts and submit feedback. Researcher tools manage the study and approved revisions. This navigation switch is not a login or access restriction.')
+    archived_practice = False
+    if researcher_mode:
+        with st.expander('Dataset settings and archives', expanded=False):
+            benchmark = benchmarks[st.selectbox('Benchmark dataset', list(benchmarks),
+                index=list(benchmarks.values()).index(benchmark),
+                help='Synthetic access logs used to train Isolation Forest and calculate evaluation metrics; these are not patient records.')]
+            st.session_state.active_benchmark = benchmark
+            st.caption('Keep one dataset for both review rounds. Changing it opens a separate feedback store.')
+            archived_practice = st.checkbox('Open archived practice responses', value=False,
+                help='Access earlier rehearsal files separately from the reviewer study. Practice data is excluded from the study.')
+        if st.button('Run Python pipeline', type='primary'):
+            baseline_run.clear()
 pipeline_digest = hashlib.sha256(b''.join((ROOT / name).read_bytes()
     for name in ('pipeline.py', 'reference_pipeline.py', 'realistic_pipeline.py', 'translation.py'))).hexdigest()
 result = baseline_run(pipeline_digest, benchmark)
 metadata = result['metadata']
-workspace = st.radio('Data workspace', ['Rehearsal', 'Reviewer study'], horizontal=True,
-                     help='Rehearsal responses and revisions are stored separately from research data.')
-participant_view = workspace == 'Reviewer study' and st.radio(
-    'Study view', ['Participant', 'Researcher'], horizontal=True) == 'Participant'
+workspace = 'Rehearsal' if researcher_mode and archived_practice else 'Reviewer study'
 storage_root = ROOT / 'data'
 if benchmark != 'reference-v1':
     storage_root /= f"{benchmark}-{metadata['dataset_sha256'][:12]}"
@@ -93,20 +104,16 @@ if storage_errors:
     st.code(str(workspace_dir), language=None)
 rows = result['rows']
 flagged = [row for row in rows if row['flagged']]
-info.caption(f"Synthetic benchmark · {len(rows):,} events · Live Python run · Flags require a score above 0.75")
-if benchmark == 'realistic-v1':
-    st.caption('Realistic simulation · legitimate exceptions and subtle anomalies · test users excluded from training · feedback stored separately from the original demonstration')
-counts = Counter(row['alert']['severity'] for row in flagged)
-summary = [('Flagged events', len(flagged)), ('High severity', counts['High']),
-           ('Synthetic events', len(rows)), ('Reviewer submissions', len(feedback))]
-st.html('<div class="overview-strip">' + ''.join(
-    f'<div><span class="queue-label">{label}</span><strong>{value:,}</strong></div>'
-    for label, value in summary) + '</div>')
-if participant_view:
-    alerts_tab = st.container()
-else:
+st.caption('Synthetic research preview · alerts are candidates for investigation, not confirmed security incidents.')
+if researcher_mode:
+    with st.sidebar:
+        st.caption(f"{len(rows):,} synthetic events · {len(flagged)} total model flags · threshold >0.75. The simulation injects 100 anomalies; its flag rate is not a hospital incident rate.")
+        if archived_practice:
+            st.warning('Archived practice data is open. Switch this off before collecting study responses.')
     alerts_tab, evaluation_tab, research_tab, policy_tab, study_tab, revisions_tab = st.tabs(
         ['Alert review', 'Model evaluation', 'Research context', 'Role baselines', 'Study results', 'Revision studio'])
+else:
+    alerts_tab, evaluation_tab, research_tab = st.tabs(['Alert review', 'Model evaluation', 'Research context'])
 if 'saved_feedback' in st.session_state:
     st.success(st.session_state.pop('saved_feedback'))
 
@@ -118,8 +125,8 @@ with alerts_tab:
         st.info('Approve a revision or designate an unchanged control in Revision studio before collecting Round 2 feedback.')
     with st.container(key='alert_queue'):
         st.markdown('<div class="sectiontag">01 / ALERT REGISTER</div>', unsafe_allow_html=True)
-        st.subheader('All alerts')
-        st.caption('Select a row to open its explanation, SHAP evidence, role baseline and feedback form below. On a phone, swipe the table to see more columns.')
+        st.subheader('Alerts for review')
+        st.caption('Review up to 20 alerts per page. Select a row for its explanation, SHAP evidence, role baseline and feedback form. On a phone, swipe the table sideways for more columns.')
         filters = st.columns([1, 2, 1])
         severity_filter = filters[0].selectbox('Severity', ['All', *SEVERITY])
         query = filters[1].text_input('Search alerts', placeholder='Search role, department, user or event').strip().casefold()
@@ -130,24 +137,39 @@ with alerts_tab:
                    and query in ' '.join((r['id'], r['role'], r['user_id'], r['department_accessed'],
                                           copy_for(r, round_number, revisions)[0])).casefold()
                    and (queue_status == 'All alerts' or (r['id'] in completed) == (queue_status == 'Has a response'))]
-        st.caption(f'{len(visible)} of {len(flagged)} alerts · sorted by severity, then anomaly score · response status includes any reviewer in this workspace and round')
-        if visible:
+        pages = page_count(visible)
+        filter_signature = hashlib.sha256('|'.join(r['id'] for r in visible).encode()).hexdigest()[:12]
+        current_page = st.selectbox('Alert page', list(range(1, pages + 1)),
+            format_func=lambda number: f'Page {number} of {pages}',
+            key=f'page_{workspace_key}_{round_number}_{filter_signature}')
+        page_rows = alert_page(visible, current_page)
+        page_counts = Counter(copy_for(r, round_number, revisions)[1] for r in page_rows)
+        page_reviewed = len({r['id'] for r in page_rows} & completed)
+        summary = [('Alerts on this page', len(page_rows)), ('High severity on page', page_counts['High']),
+                   ('Reviewed on page', page_reviewed)]
+        st.html('<div class="overview-strip review-summary">' + ''.join(
+            f'<div><span class="queue-label">{label}</span><strong>{value:,}</strong></div>'
+            for label, value in summary) + '</div>')
+        st.caption(f'{len(page_rows)} alerts on this page · sorted by severity, then score. '
+                   'Pagination changes the display only; model results and evaluation remain unchanged. '
+                   'Response status includes any reviewer in this study round.')
+        if page_rows:
             register = pd.DataFrame([{
                 'Severity': copy_for(r, round_number, revisions)[1], 'Event': r['id'],
                 'Role': r['role'], 'Department': r['department_accessed'],
                 'Time': f'{r["date"]} {r["login_time"]}',
                 'Alert summary': copy_for(r, round_number, revisions)[0].splitlines()[0],
                 'Response': 'Received' if r['id'] in completed else 'Awaiting',
-            } for r in visible])
+            } for r in page_rows])
             def severity_style(value):
                 backgrounds = {'High': '#f8e0e4', 'Medium': '#faecd3', 'Low': '#e0eaf5'}
                 return f'background-color: {backgrounds[value]}; color: {COLORS[value]}; font-weight: bold'
             # A changed row order gets a fresh widget, so a stale row index cannot open a different case.
             signature = hashlib.sha256(json.dumps(register.to_dict('records'), sort_keys=True).encode()).hexdigest()[:12]
             default_id = st.session_state.get('selected_event', 'EVT-0903')
-            default_index = next((i for i, r in enumerate(visible) if r['id'] == default_id), 0)
+            default_index = next((i for i, r in enumerate(page_rows) if r['id'] == default_id), 0)
             selection = st.dataframe(register.style.map(severity_style, subset=['Severity']),
-                hide_index=True, width='stretch', height=min(425, 40 + 36 * len(visible)),
+                hide_index=True, width='stretch', height=min(425, 40 + 36 * len(page_rows)),
                 row_height=36, key=f'register_{workspace_key}_{round_number}_{signature}',
                 on_select='rerun', selection_mode='single-row',
                 selection_default={'selection': {'rows': [default_index], 'columns': [], 'cells': []}},
@@ -155,13 +177,13 @@ with alerts_tab:
                     'Severity': st.column_config.TextColumn(width='small'),
                     'Alert summary': st.column_config.TextColumn(width='large')})
             if selection.selection.rows:
-                st.session_state.selected_event = visible[selection.selection.rows[0]]['id']
+                st.session_state.selected_event = page_rows[selection.selection.rows[0]]['id']
     with st.container(key='alert_detail'):
-        if not visible:
+        if not page_rows:
             st.info('No alerts match the current filters.')
         else:
             selected = st.session_state.get('selected_event', 'EVT-0903')
-            row = next((r for r in visible if r['id'] == selected), visible[0])
+            row = next((r for r in page_rows if r['id'] == selected), page_rows[0])
             message, severity, version = copy_for(row, round_number, revisions)
             policy = next(b for b in result['baselines'] if b[0] == row['role'])
             event_id = row['id']
@@ -254,9 +276,6 @@ with alerts_tab:
                                     st.session_state['saved_feedback'] = f'Saved {round_name} feedback for {event_id} in {workspace}.'
                                     st.rerun()
 
-if participant_view:
-    st.stop()
-
 with evaluation_tab:
     st.subheader('Held-out benchmark')
     st.caption(f"{metadata['test_count']} held-out synthetic events · {metadata['test_anomalies']} injected anomalies · threshold >0.75")
@@ -323,12 +342,16 @@ with research_tab:
                 'then refining the wording using reviewer feedback. Detection performance and explanation usefulness are evaluated separately.')
     st.warning('These published results use different data and methods. The table provides context; '
                'it cannot establish that this prototype is better or worse. A fair performance comparison needs the same dataset, labels and test protocol.')
-    st.dataframe(pd.DataFrame(comparison_rows(result)), hide_index=True, width='stretch')
-    st.caption('Near-range references: Chua reports 93% accuracy on web logs. Abengowe Table 2 lists 92% for Linear SVC, '
-               'but its prose says 93% and stronger models reach 98%. Neither is the same EHR access-log benchmark. '
-               'These distinctions remain in the comparison.')
-    for ref in REFERENCES:
-        with st.expander(ref['citation'] + ' · ' + ref['title']):
+    st.markdown('**Isolation Forest method context**')
+    st.dataframe(pd.DataFrame(comparison_rows(result, same_method=True)), hide_index=True, width='stretch')
+    st.caption('This main table groups the same detector family. The datasets still differ, so the numbers do not establish a performance improvement.')
+    with st.expander('Other approaches and complete literature context', expanded=False):
+        st.dataframe(pd.DataFrame(comparison_rows(result)), hide_index=True, width='stretch')
+        st.caption('Different methods are grouped separately, regardless of whether their reported accuracy is higher or lower. '
+                   'Abengowe Table 2 lists Linear SVC at 92%, its prose says 93%, and stronger models reach 98%. '
+                   'The 2019 paper is foundational background, not a recent numerical comparator.')
+        for ref in REFERENCES:
+            st.markdown('**' + ref['citation'] + ' · ' + ref['title'] + '**')
             st.write(ref['relevance'])
             if ref.get('location'):
                 st.caption('Reported values from ' + ref['location'] + '. Not independently reproduced.')
@@ -341,6 +364,9 @@ with research_tab:
                'Metrics remain calculated from the model; no target percentage is imposed.')
     st.download_button('Download evaluation and research note', evaluation_report(result),
                        'evaluation_and_research_context.md', 'text/markdown')
+
+if not researcher_mode:
+    st.stop()
 
 with policy_tab:
     st.subheader('Expected workflow by role')

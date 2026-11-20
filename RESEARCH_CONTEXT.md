@@ -44,3 +44,7 @@ Select an alert, inspect its wording, raw SHAP and role baseline, and submit fiv
 ## Sensitivity and limitations
 
 The primary realistic run is fixed to seed 42. All configured additional seeds 43–46 are reported in the dashboard and evaluations/realistic-v1.json; no best seed is substituted for the primary run. These development simulations are not a blind external validation or hospital trial. Higher realism and separated test users do not establish clinical representativeness. Supervisor-approved papers and actual reviewer responses are still needed. No patient data is used.
+
+## Reviewer presentation update — 20 November 2026
+
+The reviewer list displays up to 20 cases per page. This presentation limit does not change the detector, total flags, evaluation population or reported metrics. Cards are labelled as page counts. The benchmark controls and archived practice data are in Researcher tools, outside the reviewer flow. The main literature table groups Isolation Forest methods; the full method context and higher reported results remain available separately.
