@@ -9,20 +9,24 @@ from streamlit.testing.v1 import AppTest
 from feedback import read_feedback
 from pipeline import run_pipeline
 from research_context import comparison_rows
-from review_presentation import alert_page, page_count
+from review_presentation import review_set
 from test_review_workflow import widget
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class PresentationTests(unittest.TestCase):
-    def test_pagination_preserves_every_case_without_exceeding_twenty(self):
-        items = list(range(102))
-        batches = [alert_page(items, page) for page in range(1, page_count(items) + 1)]
-        self.assertEqual([len(batch) for batch in batches], [20, 20, 20, 20, 20, 2])
-        self.assertEqual([item for batch in batches for item in batch], items)
-        self.assertEqual(alert_page([], 1), [])
-        self.assertEqual(alert_page(items, 999), [100, 101])
+    def test_fixed_review_set_preserves_benchmark_and_round_membership(self):
+        result = run_pipeline('realistic-v1')
+        before = list(result['metrics'])
+        sample = review_set(result['rows'])
+        self.assertEqual(len(sample), 20)
+        self.assertEqual(len({r['id'] for r in sample}), 20)
+        self.assertTrue(all(r['flagged'] for r in sample))
+        self.assertEqual([r['id'] for r in sample], [r['id'] for r in review_set(list(reversed(result['rows'])))])
+        self.assertEqual(result['metrics'], before)
+        self.assertEqual(sum(r['flagged'] for r in result['rows']), 102)
+        self.assertEqual(review_set([]), [])
 
     def test_comparison_groups_by_method_and_retains_full_literature(self):
         result = run_pipeline('realistic-v1', explain=False)
@@ -35,7 +39,7 @@ class PresentationTests(unittest.TestCase):
         self.assertTrue(any('Abengowe' in row['Study'] for row in full))
         self.assertEqual(main[0], full[0])
 
-    def test_reviewer_screen_and_cross_page_feedback_binding(self):
+    def test_fixed_reviewer_set_filters_and_feedback_binding(self):
         with TemporaryDirectory() as temporary:
             root = Path(temporary)
             for source in [*ROOT.glob('*.py'), ROOT / 'interface.css']:
@@ -49,13 +53,11 @@ class PresentationTests(unittest.TestCase):
             self.assertFalse(any(x.label == 'Save approved Round 2 version' for x in app.button))
             self.assertEqual(len(app.dataframe[0].value), 20)
             first_ids = set(app.dataframe[0].value['Event'])
-            widget(app.selectbox, 'Alert page').set_value(2).run()
-            self.assertFalse(app.exception)
-            second_ids = set(app.dataframe[0].value['Event'])
-            self.assertEqual(len(second_ids), 20)
-            self.assertFalse(first_ids & second_ids)
+            self.assertNotIn('Alert page', [x.label for x in app.selectbox])
+            widget(app.text_input, 'Search alerts').set_value('EVT-0903').run()
+            self.assertEqual(list(app.dataframe[0].value['Event']), ['EVT-0903'])
             selected = app.session_state['selected_event']
-            self.assertIn(selected, second_ids)
+            self.assertIn(selected, first_ids)
             widget(app.text_input, 'Reviewer code').set_value('IT20')
             for label in ['Was this alert clear?', 'Was the evidence complete?', 'Was the severity appropriate?',
                           'Would you trust this alert to guide a review?',
@@ -67,8 +69,15 @@ class PresentationTests(unittest.TestCase):
             self.assertEqual(read_feedback(path)[0]['event'], selected)
             self.assertEqual(read_feedback(path)[0]['benchmark_id'], 'realistic-v1')
             self.assertTrue(any(x.label == 'Accuracy' and x.value == '96.9%' for x in app.metric))
-            widget(app.selectbox, 'Alert page').set_value(6).run()
-            self.assertEqual(len(app.dataframe[0].value), 2)
+            widget(app.text_input, 'Search alerts').set_value('').run()
+            self.assertEqual(set(app.dataframe[0].value['Event']), first_ids)
+            widget(app.radio, 'Study round').set_value('Round 2').run()
+            self.assertEqual(set(app.dataframe[0].value['Event']), first_ids)
+            widget(app.toggle, 'Researcher tools').set_value(True).run()
+            widget(app.checkbox, 'Inspect all model flags').check().run()
+            self.assertEqual(len(app.dataframe[0].value), 102)
+            widget(app.toggle, 'Researcher tools').set_value(False).run()
+            self.assertEqual(len(app.dataframe[0].value), 20)
             widget(app.text_input, 'Search alerts').set_value('impossible-search-value').run()
             self.assertFalse(app.exception)
             self.assertTrue(any('No alerts match' in x.value for x in app.info))

@@ -38,7 +38,7 @@ If the existing `.venv312` is damaged, rename it before rebuilding. For an insta
 ## Review alerts
 
 1. Open the dashboard. The default reviewer screen has **Alert review**, **Model evaluation** and **Research context**. It has no Rehearsal radio, Participant/Researcher selector or benchmark selector.
-2. **Alerts for review** shows at most **20 cases per page**, sorted by severity and score. Use **Alert page**, search and filters to reach the remaining cases. Cards explicitly describe the current page; the total model flags and benchmark metrics are unchanged. These synthetic flags are investigation candidates, not confirmed hospital incidents.
+2. **Alerts for review** shows at most **20 cases in a fixed review set**, sorted by severity and score. Search and filters apply within those same 20 cases across both rounds. Researcher tools can inspect all model flags separately; the total model flags and benchmark metrics are unchanged. These synthetic flags are investigation candidates, not confirmed hospital incidents.
 3. Select a row to open its plain-English explanation, raw SHAP values, role baseline and direct feedback form. Supply your anonymous reviewer code, five ratings and an optional comment. The selected event, round, dataset and wording version attach automatically.
 4. Use the same reviewer code, dataset and cases in Round 2. The case must first have an approved revision or an explicit unchanged-control designation.
 
@@ -77,7 +77,7 @@ Neither numerical superiority over these papers nor real-hospital performance ha
 
 ## Hosted reviewer preview
 
-Streamlit Community Cloud can run `app.py` from this repository. Local CSV/JSON storage is suitable for a preview; hosted filesystem contents can be lost on a reboot or redeployment. Export feedback before updating the app and after review sessions. Durable study collection needs an external database or another persistent storage service. Participant/Researcher mode is a presentation setting, not authentication.
+Streamlit Community Cloud can run `app.py` from this repository. Local CSV/JSON storage is suitable for a preview; hosted filesystem contents can be lost on a reboot or redeployment. Export feedback before updating the app and after review sessions. Durable study collection needs an external database or another persistent storage service. Researcher tools is a navigation setting, not authentication.
 
 ## Verify the update
 

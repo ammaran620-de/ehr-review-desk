@@ -121,7 +121,7 @@ def evaluation_report(result):
         *[f"- **{ref['citation']}** — {ref['title']}. {ref.get('location', '')} "
           f"{ref['relevance']} {ref['url']}" for ref in REFERENCES], '',
         '## Human evaluation and data separation', '',
-        'The reviewer list displays up to 20 alerts per page without changing model flags or metrics. '
+        'The reviewer list displays up to 20 alerts in a fixed review set without changing model flags or metrics. '
         'Dataset settings and archived practice data are in Researcher tools. '
         'Select an alert, inspect its wording, raw SHAP and role baseline, and submit five 1–5 ratings plus '
         'an optional comment. No recall quiz is required. The event, wording version, benchmark and dataset '

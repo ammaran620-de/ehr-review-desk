@@ -47,4 +47,4 @@ The primary realistic run is fixed to seed 42. All configured additional seeds 4
 
 ## Reviewer presentation update — 20 November 2026
 
-The reviewer list displays up to 20 cases per page. This presentation limit does not change the detector, total flags, evaluation population or reported metrics. Cards are labelled as page counts. The benchmark controls and archived practice data are in Researcher tools, outside the reviewer flow. The main literature table groups Isolation Forest methods; the full method context and higher reported results remain available separately.
+The reviewer list displays up to 20 cases in a fixed review set. This presentation limit does not change the detector, total flags, evaluation population or reported metrics. Cards count the displayed review cases. Case selection uses baseline severity, anomaly score and event ID before filtering, and stays the same across rounds. The benchmark controls and archived practice data are in Researcher tools, outside the reviewer flow. The main literature table groups Isolation Forest methods; the full method context and higher reported results remain available separately.

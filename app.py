@@ -15,7 +15,7 @@ from feedback import read_feedback, save_feedback
 from revision_store import load_revisions, save_revision
 from pipeline import run_pipeline
 from research_context import REFERENCES, comparison_rows, evaluation_report
-from review_presentation import PAGE_SIZE, alert_page, page_count
+from review_presentation import review_set
 
 ROOT = Path(__file__).resolve().parent
 SEVERITY = {'High': 0, 'Medium': 1, 'Low': 2}
@@ -59,12 +59,15 @@ with st.sidebar:
         help='Open dataset settings, study results and the Round 2 revision studio.')
     st.caption('Reviewers read alerts and submit feedback. Researcher tools manage the study and approved revisions. This navigation switch is not a login or access restriction.')
     archived_practice = False
+    show_all_flags = False
     if researcher_mode:
         with st.expander('Dataset settings and archives', expanded=False):
             benchmark = benchmarks[st.selectbox('Benchmark dataset', list(benchmarks),
                 index=list(benchmarks.values()).index(benchmark),
                 help='Synthetic access logs used to train Isolation Forest and calculate evaluation metrics; these are not patient records.')]
             st.session_state.active_benchmark = benchmark
+            show_all_flags = st.checkbox('Inspect all model flags', value=False,
+                help='Researcher inspection only. The reviewer study uses the fixed 20-alert review set.')
             st.caption('Keep one dataset for both review rounds. Changing it opens a separate feedback store.')
             archived_practice = st.checkbox('Open archived practice responses', value=False,
                 help='Access earlier rehearsal files separately from the reviewer study. Practice data is excluded from the study.')
@@ -104,6 +107,8 @@ if storage_errors:
     st.code(str(workspace_dir), language=None)
 rows = result['rows']
 flagged = [row for row in rows if row['flagged']]
+review_cases = review_set(rows)
+queue_cases = flagged if show_all_flags else review_cases
 st.caption('Synthetic research preview · alerts are candidates for investigation, not confirmed security incidents.')
 if researcher_mode:
     with st.sidebar:
@@ -126,32 +131,30 @@ with alerts_tab:
     with st.container(key='alert_queue'):
         st.markdown('<div class="sectiontag">01 / ALERT REGISTER</div>', unsafe_allow_html=True)
         st.subheader('Alerts for review')
-        st.caption('Review up to 20 alerts per page. Select a row for its explanation, SHAP evidence, role baseline and feedback form. On a phone, swipe the table sideways for more columns.')
+        st.caption('The review set contains 20 alerts selected by baseline severity, then anomaly score. The same cases stay available in both rounds. Select a row for its explanation, SHAP evidence, role baseline and feedback form. On a phone, swipe the table sideways for more columns.')
+        if show_all_flags:
+            st.info('Researcher inspection: all model flags are shown. Switch off Inspect all model flags to return to the 20-alert reviewer set.')
         filters = st.columns([1, 2, 1])
         severity_filter = filters[0].selectbox('Severity', ['All', *SEVERITY])
         query = filters[1].text_input('Search alerts', placeholder='Search role, department, user or event').strip().casefold()
         queue_status = filters[2].selectbox('Review status', ['All alerts', 'Awaiting a response', 'Has a response'])
         completed = {item['event'] for item in feedback if item['round'] == str(round_number)}
-        ordered = sorted(flagged, key=lambda r: (SEVERITY[copy_for(r, round_number, revisions)[1]], -r['score'], r['id']))
+        ordered = sorted(queue_cases, key=lambda r: (SEVERITY[copy_for(r, round_number, revisions)[1]], -r['score'], r['id']))
         visible = [r for r in ordered if (severity_filter == 'All' or copy_for(r, round_number, revisions)[1] == severity_filter)
                    and query in ' '.join((r['id'], r['role'], r['user_id'], r['department_accessed'],
                                           copy_for(r, round_number, revisions)[0])).casefold()
                    and (queue_status == 'All alerts' or (r['id'] in completed) == (queue_status == 'Has a response'))]
-        pages = page_count(visible)
-        filter_signature = hashlib.sha256('|'.join(r['id'] for r in visible).encode()).hexdigest()[:12]
-        current_page = st.selectbox('Alert page', list(range(1, pages + 1)),
-            format_func=lambda number: f'Page {number} of {pages}',
-            key=f'page_{workspace_key}_{round_number}_{filter_signature}')
-        page_rows = alert_page(visible, current_page)
+        page_rows = visible
         page_counts = Counter(copy_for(r, round_number, revisions)[1] for r in page_rows)
         page_reviewed = len({r['id'] for r in page_rows} & completed)
-        summary = [('Alerts on this page', len(page_rows)), ('High severity on page', page_counts['High']),
-                   ('Reviewed on page', page_reviewed)]
+        summary = [('Alerts shown', len(page_rows)), ('High severity shown', page_counts['High']),
+                   ('Reviewed alerts shown', page_reviewed)]
         st.html('<div class="overview-strip review-summary">' + ''.join(
             f'<div><span class="queue-label">{label}</span><strong>{value:,}</strong></div>'
             for label, value in summary) + '</div>')
-        st.caption(f'{len(page_rows)} alerts on this page · sorted by severity, then score. '
-                   'Pagination changes the display only; model results and evaluation remain unchanged. '
+        st.caption(f'{len(page_rows)} alerts shown · sorted by severity, then score. '
+                   'Filters apply within the fixed review set unless researcher inspection is enabled. '
+                   'This review sample does not change total model flags or evaluation metrics. '
                    'Response status includes any reviewer in this study round.')
         if page_rows:
             register = pd.DataFrame([{
