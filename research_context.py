@@ -8,7 +8,7 @@ REFERENCES = [
         'url': 'https://doi.org/10.4314/wojast.v16i1.123',
         'method': 'Linear SVC and other supervised baselines',
         'data': 'NSL-KDD network intrusion data, not EHR employee access logs',
-        'accuracy': '92% Linear SVC; 44–98% across Table 2 models',
+        'accuracy': '92% (Linear SVC)',
         'precision': 'Class-specific', 'recall': 'Class-specific', 'f1': 'Class-specific', 'auc': 'Not entered',
         'location': 'Table 2, Overall Accuracy row',
         'relevance': 'Table 2 reports Linear SVC at 92%, while the prose reports 93%; this discrepancy is unresolved. RF/DT reach 98% in the same table. Publication is listed as 8 May 2025 in a 2024-labelled issue. This is related security context, not a matched EHR access benchmark.',
@@ -60,18 +60,16 @@ REFERENCES = [
 ]
 
 
-def comparison_rows(result, *, same_method=False):
+DASHBOARD_REFERENCES = tuple(REFERENCES[:2])
+
+def comparison_rows(result):
     """Published values retain their own dataset and method, without a leaderboard."""
     p, r, f, a, auc = result['metrics']
     rows = [{'Study': 'This prototype · computed now', 'Method': 'Isolation Forest (unsupervised)',
              'Data / evaluation': f"{result['metadata']['test_count']} synthetic test events; {result['metadata']['test_anomalies']} anomalies",
              'Accuracy': f'{a:.1%}', 'Precision': f'{p:.1%}', 'Recall': f'{r:.1%}',
              'F1': f'{f:.1%}', 'ROC-AUC': f'{auc:.3f}'}]
-    for ref in REFERENCES:
-        if 'accuracy' not in ref:
-            continue
-        if same_method and ref['method'] != 'Isolation Forest (unsupervised)':
-            continue
+    for ref in DASHBOARD_REFERENCES:
         rows.append({'Study': ref['citation'], 'Method': ref['method'],
                      'Data / evaluation': ref['data'], 'Accuracy': ref['accuracy'],
                      'Precision': ref['precision'], 'Recall': ref['recall'],
@@ -116,12 +114,12 @@ def evaluation_report(result):
           for row in comparison_rows(result)], '',
         'These are author-reported figures, not reproduced experiments or a leaderboard. Differences in tasks, '
         'datasets, class balances and protocols prevent direct superiority claims. The Abengowe table/prose '
-        'discrepancy is retained rather than resolved by picking the more convenient value. Higher published '
-        'results remain visible. Desired percentages are not substituted for measured results.', '',
+        'discrepancy is disclosed. The comparison shows the Linear SVC value from Table 2 only. '
+        'Additional citations below provide broader research context.', '',
         *[f"- **{ref['citation']}** — {ref['title']}. {ref.get('location', '')} "
           f"{ref['relevance']} {ref['url']}" for ref in REFERENCES], '',
         '## Human evaluation and data separation', '',
-        'The reviewer list displays up to 20 alerts in a fixed review set without changing model flags or metrics. '
+        'The reviewer list displays up to 20 flagged events across the available review priorities. '
         'Dataset settings and archived practice data are in Researcher tools. '
         'Select an alert, inspect its wording, raw SHAP and role baseline, and submit five 1–5 ratings plus '
         'an optional comment. No recall quiz is required. The event, wording version, benchmark and dataset '

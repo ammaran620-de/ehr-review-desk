@@ -14,11 +14,10 @@ from filelock import FileLock
 from feedback import read_feedback, save_feedback
 from revision_store import load_revisions, save_revision
 from pipeline import run_pipeline
-from research_context import REFERENCES, comparison_rows, evaluation_report
-from review_presentation import review_set
+from research_context import DASHBOARD_REFERENCES, comparison_rows, evaluation_report
+from review_presentation import SEVERITY_ORDER as SEVERITY, review_set
 
 ROOT = Path(__file__).resolve().parent
-SEVERITY = {'High': 0, 'Medium': 1, 'Low': 2}
 TEMPLATES = {'Combined anomaly', 'Burst behavior', 'Excessive access',
              'Off-hours access', 'Role mismatch', 'Unassigned access', 'Fallback'}
 RATINGS = {'clarity': 'Was this alert clear?', 'completeness': 'Was the evidence complete?',
@@ -43,19 +42,28 @@ def robustness_run(pipeline_digest):
 
 def copy_for(row, round_number, revisions):
     alert = row['alert']
-    severity = alert['severity']
+    message, severity = alert['message'], alert['severity']
+    baseline_version = alert['version']
     revision = revisions.get(row['id']) if round_number == 2 else None
-    if revision and not revision.get('control'):
-        message, severity = revision['message'], revision['severity']
-        version = 'r2-' + hashlib.sha256(f'{message}|{severity}'.encode()).hexdigest()[:12]
-        return message, severity, version
-    return alert['message'], severity, 'baseline-v1'
+    if not revision:
+        return message, severity, baseline_version
+    if revision.get('control'):
+        version = baseline_version if revision['severity'] == severity else 'baseline-v1'
+        return revision['message'], revision['severity'], version
+    message, severity = revision['message'], revision['severity']
+    version = 'r2-' + hashlib.sha256(f'{message}|{severity}'.encode()).hexdigest()[:12]
+    return message, severity, version
+
+
+def enable_revision_tools():
+    st.session_state['researcher_tools'] = True
+    st.session_state['open_revision_studio'] = True
 
 benchmarks = {'Realistic access patterns (v1)': 'realistic-v1', 'Original demonstration (v1)': 'reference-v1'}
 benchmark = st.session_state.get('active_benchmark', 'realistic-v1')
 with st.sidebar:
     st.subheader('Study tools')
-    researcher_mode = st.toggle('Researcher tools', value=False,
+    researcher_mode = st.toggle('Researcher tools', key='researcher_tools',
         help='Open dataset settings, study results and the Round 2 revision studio.')
     st.caption('Reviewers read alerts and submit feedback. Researcher tools manage the study and approved revisions. This navigation switch is not a login or access restriction.')
     archived_practice = False
@@ -110,15 +118,16 @@ flagged = [row for row in rows if row['flagged']]
 review_cases = review_set(rows)
 queue_cases = flagged if show_all_flags else review_cases
 st.caption('Synthetic research preview · alerts are candidates for investigation, not confirmed security incidents.')
+tab_names = ['Alert review', 'Model evaluation', 'Research context', 'Revision Studio']
 if researcher_mode:
     with st.sidebar:
         st.caption(f"{len(rows):,} synthetic events · {len(flagged)} total model flags · threshold >0.75. The simulation injects 100 anomalies; its flag rate is not a hospital incident rate.")
         if archived_practice:
             st.warning('Archived practice data is open. Switch this off before collecting study responses.')
-    alerts_tab, evaluation_tab, research_tab, policy_tab, study_tab, revisions_tab = st.tabs(
-        ['Alert review', 'Model evaluation', 'Research context', 'Role baselines', 'Study results', 'Revision studio'])
-else:
-    alerts_tab, evaluation_tab, research_tab = st.tabs(['Alert review', 'Model evaluation', 'Research context'])
+    tab_names.extend(['Role baselines', 'Study results'])
+default_tab = 'Revision Studio' if st.session_state.pop('open_revision_studio', False) else 'Alert review'
+alerts_tab, evaluation_tab, research_tab, revisions_tab, *researcher_tabs = st.tabs(
+    tab_names, default=default_tab)
 if 'saved_feedback' in st.session_state:
     st.success(st.session_state.pop('saved_feedback'))
 
@@ -127,11 +136,13 @@ with alerts_tab:
     round_name = st.radio('Study round', ['Round 1', 'Round 2'], horizontal=True)
     round_number = 1 if round_name == 'Round 1' else 2
     if round_number == 2 and not revisions:
-        st.info('Approve a revision or designate an unchanged control in Revision studio before collecting Round 2 feedback.')
+        st.info('Approve a revision or designate an unchanged control in Revision Studio before collecting Round 2 feedback.')
     with st.container(key='alert_queue'):
         st.markdown('<div class="sectiontag">01 / ALERT REGISTER</div>', unsafe_allow_html=True)
         st.subheader('Alerts for review')
-        st.caption('The review set contains 20 alerts selected by baseline severity, then anomaly score. The same cases stay available in both rounds. Select a row for its explanation, SHAP evidence, role baseline and feedback form. On a phone, swipe the table sideways for more columns.')
+        st.caption('The fixed review set includes up to 20 alerts across High, Medium and Low priority. '
+                   'Low-priority flags can reflect unusual volume during the expected shift and department. '
+                   'Select a row to review its evidence and submit feedback.')
         if show_all_flags:
             st.info('Researcher inspection: all model flags are shown. Switch off Inspect all model flags to return to the 20-alert reviewer set.')
         filters = st.columns([1, 2, 1])
@@ -139,23 +150,21 @@ with alerts_tab:
         query = filters[1].text_input('Search alerts', placeholder='Search role, department, user or event').strip().casefold()
         queue_status = filters[2].selectbox('Review status', ['All alerts', 'Awaiting a response', 'Has a response'])
         completed = {item['event'] for item in feedback if item['round'] == str(round_number)}
-        ordered = sorted(queue_cases, key=lambda r: (SEVERITY[copy_for(r, round_number, revisions)[1]], -r['score'], r['id']))
+        ordered = (sorted(queue_cases, key=lambda r: (SEVERITY[copy_for(r, round_number, revisions)[1]],
+                                                      -r['score'], r['id']))
+                   if show_all_flags else queue_cases)
         visible = [r for r in ordered if (severity_filter == 'All' or copy_for(r, round_number, revisions)[1] == severity_filter)
                    and query in ' '.join((r['id'], r['role'], r['user_id'], r['department_accessed'],
                                           copy_for(r, round_number, revisions)[0])).casefold()
                    and (queue_status == 'All alerts' or (r['id'] in completed) == (queue_status == 'Has a response'))]
         page_rows = visible
         page_counts = Counter(copy_for(r, round_number, revisions)[1] for r in page_rows)
-        page_reviewed = len({r['id'] for r in page_rows} & completed)
-        summary = [('Alerts shown', len(page_rows)), ('High severity shown', page_counts['High']),
-                   ('Reviewed alerts shown', page_reviewed)]
+        summary = [('Alerts shown', len(page_rows)), *[(severity, page_counts[severity]) for severity in SEVERITY]]
         st.html('<div class="overview-strip review-summary">' + ''.join(
             f'<div><span class="queue-label">{label}</span><strong>{value:,}</strong></div>'
             for label, value in summary) + '</div>')
-        st.caption(f'{len(page_rows)} alerts shown · sorted by severity, then score. '
-                   'Filters apply within the fixed review set unless researcher inspection is enabled. '
-                   'This review sample does not change total model flags or evaluation metrics. '
-                   'Response status includes any reviewer in this study round.')
+        st.caption('The reviewer set uses the same cases in both rounds. '
+                   'Response status reflects all reviewers in the selected round.')
         if page_rows:
             register = pd.DataFrame([{
                 'Severity': copy_for(r, round_number, revisions)[1], 'Event': r['id'],
@@ -345,20 +354,12 @@ with research_tab:
                 'then refining the wording using reviewer feedback. Detection performance and explanation usefulness are evaluated separately.')
     st.warning('These published results use different data and methods. The table provides context; '
                'it cannot establish that this prototype is better or worse. A fair performance comparison needs the same dataset, labels and test protocol.')
-    st.markdown('**Isolation Forest method context**')
-    st.dataframe(pd.DataFrame(comparison_rows(result, same_method=True)), hide_index=True, width='stretch')
-    st.caption('This main table groups the same detector family. The datasets still differ, so the numbers do not establish a performance improvement.')
-    with st.expander('Other approaches and complete literature context', expanded=False):
-        st.dataframe(pd.DataFrame(comparison_rows(result)), hide_index=True, width='stretch')
-        st.caption('Different methods are grouped separately, regardless of whether their reported accuracy is higher or lower. '
-                   'Abengowe Table 2 lists Linear SVC at 92%, its prose says 93%, and stronger models reach 98%. '
-                   'The 2019 paper is foundational background, not a recent numerical comparator.')
-        for ref in REFERENCES:
-            st.markdown('**' + ref['citation'] + ' · ' + ref['title'] + '**')
-            st.write(ref['relevance'])
-            if ref.get('location'):
-                st.caption('Reported values from ' + ref['location'] + '. Not independently reproduced.')
-            st.link_button('Open original study', ref['url'])
+    st.markdown('**Published study comparison**')
+    st.dataframe(pd.DataFrame(comparison_rows(result)), hide_index=True, width='stretch')
+    for ref in DASHBOARD_REFERENCES:
+        st.markdown(f"- [{ref['citation']}]({ref['url']}) · {ref['location']}.")
+    st.caption('Abengowe et al. report 92% for Linear SVC in Table 2 and 93% in the prose. '
+               'The comparison uses the Table 2 value.')
     st.markdown('**What the reviewer study can show**')
     st.write('The five ratings measure perceived clarity, completeness, severity fit, trust and clarity relative to raw SHAP. '
              'Matched Round 1 and Round 2 responses can describe changes after a wording revision. '
@@ -369,8 +370,13 @@ with research_tab:
                        'evaluation_and_research_context.md', 'text/markdown')
 
 if not researcher_mode:
+    with revisions_tab:
+        st.subheader('Revision Studio')
+        st.write('Enable researcher tools to review Round 1 responses and approve wording for Round 2.')
+        st.button('Open Revision Studio', on_click=enable_revision_tools)
     st.stop()
 
+policy_tab, study_tab = researcher_tabs
 with policy_tab:
     st.subheader('Expected workflow by role')
     st.dataframe(pd.DataFrame([{'Role': role, 'Shift': f'{start:02}:00–{end:02}:00',
@@ -420,7 +426,7 @@ with study_tab:
         st.download_button('Download feedback CSV', FEEDBACK.read_bytes(), f'{benchmark}_{workspace.lower().replace(" ", "_")}_feedback.csv', 'text/csv')
 
 with revisions_tab:
-    st.subheader('Round 2 revision studio')
+    st.subheader('Round 2 Revision Studio')
     st.caption('Review Round 1 responses and save an approved version for an individual case. Round 1 always shows the original alert.')
     case_ids = [row['id'] for row in flagged]
     event = st.selectbox('Case to revise', case_ids, index=case_ids.index('EVT-0903') if 'EVT-0903' in case_ids else 0)

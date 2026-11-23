@@ -53,12 +53,16 @@ def translate(row, features):
     else:
         template = 'Fallback'
 
+    baseline_version = 'baseline-v1'
     if burst or {'Time', 'Volume'} <= active or len(active) == 3:
         severity = 'High'
     elif len(active) == 2 or (len(active) == 1 and 'High' in levels.values()):
-        severity = 'Medium'
-    elif len(active) == 1:
-        severity = 'Low'
+        volume_only_in_context = (active == {'Volume'} and not row['off_hours_access']
+                                  and not row['role_mismatch']
+                                  and row['department_accessed'] == row['assigned_department'])
+        severity = 'Low' if volume_only_in_context else 'Medium'
+        if volume_only_in_context:
+            baseline_version = 'baseline-v2'
     else:
         severity = 'Low'
 
@@ -89,6 +93,6 @@ def translate(row, features):
     body = TEMPLATES[template].format(context=context, details=details, duration=duration,
                                      rate=rate, department=row['department_accessed'],
                                      assigned=row['assigned_department'], drivers=drivers)
-    return dict(template=template, severity=severity, levels=levels, groups=sorted(active),
+    return dict(template=template, severity=severity, version=baseline_version, levels=levels, groups=sorted(active),
                 message=f'{body} {action}', context=context, action=action,
                 reasons=reasons or [f'Model signals: {drivers}.'])
