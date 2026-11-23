@@ -1,4 +1,5 @@
 """Client review presentation changes must not alter benchmark evidence."""
+from collections import Counter
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import shutil
@@ -23,21 +24,26 @@ class PresentationTests(unittest.TestCase):
         self.assertEqual(len(sample), 20)
         self.assertEqual(len({r['id'] for r in sample}), 20)
         self.assertTrue(all(r['flagged'] for r in sample))
+        self.assertEqual(Counter(r['alert']['severity'] for r in sample),
+                         {'High': 7, 'Medium': 8, 'Low': 5})
+        self.assertEqual({r['alert']['severity'] for r in sample[:3]}, {'High', 'Medium', 'Low'})
+        for row in sample:
+            if row['alert']['severity'] == 'Low':
+                self.assertEqual(row['alert']['version'], 'baseline-v2')
+                self.assertEqual(row['alert']['groups'], ['Volume'])
+                self.assertFalse(row['off_hours_access'] or row['role_mismatch'])
+                self.assertEqual(row['assigned_department'], row['department_accessed'])
         self.assertEqual([r['id'] for r in sample], [r['id'] for r in review_set(list(reversed(result['rows'])))])
         self.assertEqual(result['metrics'], before)
         self.assertEqual(sum(r['flagged'] for r in result['rows']), 102)
         self.assertEqual(review_set([]), [])
 
-    def test_comparison_groups_by_method_and_retains_full_literature(self):
+    def test_comparison_has_exactly_the_two_selected_papers(self):
         result = run_pipeline('realistic-v1', explain=False)
-        main = comparison_rows(result, same_method=True)
-        full = comparison_rows(result)
-        self.assertEqual(len(main), 2)
-        self.assertTrue(any('Chua' in row['Study'] for row in main))
-        self.assertTrue(any('Tabassum' in row['Study'] and row['Accuracy'] == '99.21%' for row in full))
-        self.assertTrue(any('Iqbal' in row['Study'] for row in full))
-        self.assertTrue(any('Abengowe' in row['Study'] for row in full))
-        self.assertEqual(main[0], full[0])
+        rows = comparison_rows(result)
+        self.assertEqual([row['Accuracy'] for row in rows], ['96.9%', '92% (Linear SVC)', '93%'])
+        self.assertIn('Abengowe', rows[1]['Study'])
+        self.assertIn('Chua', rows[2]['Study'])
 
     def test_fixed_reviewer_set_filters_and_feedback_binding(self):
         with TemporaryDirectory() as temporary:
@@ -52,6 +58,9 @@ class PresentationTests(unittest.TestCase):
             self.assertFalse(any(x.label == 'Run Python pipeline' for x in app.button))
             self.assertFalse(any(x.label == 'Save approved Round 2 version' for x in app.button))
             self.assertEqual(len(app.dataframe[0].value), 20)
+            self.assertEqual(Counter(app.dataframe[0].value['Severity']), {'High': 7, 'Medium': 8, 'Low': 5})
+            self.assertIn('Revision Studio', [x.label for x in app.tabs])
+            self.assertNotIn('Other approaches and complete literature context', [x.label for x in app.expander])
             first_ids = set(app.dataframe[0].value['Event'])
             self.assertNotIn('Alert page', [x.label for x in app.selectbox])
             widget(app.text_input, 'Search alerts').set_value('EVT-0903').run()
@@ -73,7 +82,9 @@ class PresentationTests(unittest.TestCase):
             self.assertEqual(set(app.dataframe[0].value['Event']), first_ids)
             widget(app.radio, 'Study round').set_value('Round 2').run()
             self.assertEqual(set(app.dataframe[0].value['Event']), first_ids)
-            widget(app.toggle, 'Researcher tools').set_value(True).run()
+            widget(app.button, 'Open Revision Studio').click().run()
+            self.assertTrue(widget(app.toggle, 'Researcher tools').value)
+            self.assertIn('Save approved Round 2 version', [x.label for x in app.button])
             widget(app.checkbox, 'Inspect all model flags').check().run()
             self.assertEqual(len(app.dataframe[0].value), 102)
             widget(app.toggle, 'Researcher tools').set_value(False).run()
